@@ -46,127 +46,161 @@ import "google/protobuf/timestamp.proto";
 
 
 message CronusStore {
-    // Store of Artemis Metadata
-    // 
-    string name = 1;
-    string uuid = 2;
-    CronusStoreInfo info = 3;
-    
+  // Store of Artemis Metadata
+  // 
+  string name = 1;
+  string uuid = 2;
+  string parent_uuid = 3; // points to a parent store, if empty top-level store
+  CronusStoreInfo info = 4;
 }
 
 message CronusStoreInfo {
-    // Absolute location of persisted store
-    // ArtemStore holds 
-    // A store of menus
-    // A store of Artemis configurations
-    // A store of Artemis datasets
-    // Enables multiple top-level stores to be created
-    string path = 1;
-    google.protobuf.Timestamp created = 2;
-    CronusStoreAuxInfo aux = 3;
-    ChildStore menu_store = 4;
-    ChildStore config_store = 5;
-    ChildStore data_store = 6;
+  // Absolute location of a persisted store
+  // CronusStore can holds 
+  // Repeated list of childer stores
+  // A store of menus
+  // A store of Artemis configurations
+  // A store of Artemis datasets
+  // Repeated list of CronusObjects -- persisted content addressed files/data
+  // Enables multiple top-level stores to be created
+  string path = 1;
+  google.protobuf.Timestamp created = 2;
+  CronusStoreAuxInfo aux = 3;
+  repeated CronusStore child_stores = 4;
+  repeated CronusObject objects = 5;
 }
 
 message CronusStoreAuxInfo {
-    string description = 1;
-}
-
-message ChildStore {
-  string name = 1;
-  string uuid = 2;
-  oneof info {
-    ChildStoreInfo menu_store_info = 3;
-    ChildStoreInfo config_store_info = 4;
-    ChildStoreInfo data_store_info = 5;
-  }
-}
-
-message ChildStoreInfo {
-  ChildStoreAuxInfo aux = 1;
-  repeated CronusObject objects = 2;
-
-}
-
-message ChildStoreAuxInfo {
   string description = 1;
 }
+
+// CronusObject
+// Content Addressed pointer and metadata to persisted data or metadata
 
 message CronusObject {
   string name = 1;
   string uuid = 2;
+  string parent_uuid = 3; // Points to parent store, must always be a parent
+  string location = 13; // Full path the underlying object resides
   oneof info {
     MenuObjectInfo menu = 4; // Statistical Business Process Model (Protobuf)
     ConfigObjectInfo config = 5; // Artemis Configuration Proto (Protobuf)
-    HistsObjectInfo hists = 6; // Artemis HistCollection Output Proto (Protobuf)
-    JobObjectInfo job = 7; // Artemis Output Process Metadata Proto (Protobuf)
-    LogObjectInfo log = 8; // Artemis Log File output (Text File)
-    FileObjectInfo file = 9; // Artemis Arrow RecordBatchFile (Arrow)
-    TableObjectInfo table = 10; // Artemis Table (Protobuf -- bulk of the metadata relating to a partition)
-    DatasetObjectInfo dataset = 11; // Dataset metadata model (Protobuf)
-    PartitionObjectInfo partition = 12; // Consistent collection of output with common schema
+    DatasetObjectInfo dataset = 6; // Dataset metadata model (Protobuf)
+    HistsObjectInfo hists = 7; // Artemis HistCollection Output Proto (Protobuf)
+    JobObjectInfo job = 8; // Artemis Output Process Metadata Proto (Protobuf)
+    LogObjectInfo log = 9; // Artemis Log File output (Text File)
+    PartitionObjectInfo partition = 10; // Consistent collection of output with common schema
+    FileObjectInfo file = 11; // Artemis Arrow RecordBatchFile (Arrow)
+    TableObjectInfo table = 12; // Artemis Table (Protobuf -- bulk of the metadata relating to a partition)
   }
 }
 
+// ArtemisArtifact
+// Holder of metadata that will be persisted
+// Thus needs to interfact with a Dataset to register objects in store
+//
+// Just here as a placeholder
+message ArtemisArtifact {
+  // Required to run a job
+  // DatasetObject???
+  // How to register objects correctly in the Datastore?
+  Transform transform = 1; // Everything Artemis needs to run a job on a datafile
+    // includes the menu configuration location in store
+    // includes the job configuration location in store
+  repeated CronusObject input_files = 2; // Needs to know the input data for a given subjob
+  // Requires reference to input dataset
+  // allows retrieving the dataset information, e.g. the schema
+  string dataset_parent_id = 3; // uuid of the dataset ID in store
+  // Requires reference to the output child dataset
+  // this enables registering the objects into the datastore
+  string dataset_child_id = 4;
+  // Requires a parent job_id
+  string job_parent_id = 5;
+  // Requires a job_id
+  string child_id = 6;
+  // Required to complete a job
+  repeated CronusObject partitions = 7;
+  // Register the output files
+  // Register the output partition schemas
+  // Register output file histograms in dataset object
+  CronusObject hists = 8; // Histcollection
+  // Register output job information in dataset object
+  CronusObject jobinfo = 9; // Job process information
+  // Register output log file in dataset object
+  CronusObject log = 10; // Log file
+}
+// On output
+// hists, jobinfo, logs, partitions, files and tables
+// have already been content addressed and written to storage
+// collect the ArtemisArtifact objects
+// populate the objects into a final dataset
+// Final dataset allows for merging of collections
+// through the content addressed objects
 // CronosObjects all have oneof types of Info objects
 // Info objects are the top-level metadata for an object
 // Info objects hold an Auxilliary Info message also
 
 message MenuObjectInfo {
-    MenuObjectAuxInfo aux = 1;
+  MenuObjectAuxInfo aux = 1;
 }
 
 message MenuObjectAuxInfo {
-    string description = 1;
+  string description = 1;
 }
 
 message ConfigObjectInfo {
-    ConfigObjectAuxInfo aux = 1;
+  ConfigObjectAuxInfo aux = 1;
 }
 
 message ConfigObjectAuxInfo {
-    string description = 1;
+  string description = 1;
 }
 
 message HistsObjectInfo {
-    HistsObjectAuxInfo aux = 2;
-    repeated string keys = 1;
+  HistsObjectAuxInfo aux = 2;
+  repeated string keys = 1;
 }
 
 message HistsObjectAuxInfo {
-    string description = 1;
-    map<string,string> meta = 2;
+  string description = 1;
+  map<string,string> meta = 2;
 }
 
 message JobObjectInfo {
-    JobObjectAuxInfo aux = 1;
+  JobObjectAuxInfo aux = 1;
 }
 
 message JobObjectAuxInfo {
-    string description = 1;
+  string description = 1;
 }
 
 message LogObjectInfo {
-    LogObjectAuxInfo aux = 1;
+  LogObjectAuxInfo aux = 1;
 }
 
 message LogObjectAuxInfo {
-    string description = 1;
+  string description = 1;
 }
 
+// Dataset must be registered in Datastore
+// Job artifacts are created from input DatasetObject
+// Ouput job artifacts are collected 
+// and used to populate output DatasetObject
 message DatasetObjectInfo {
-    DatasetObjectAuxInfo aux = 1;
-    Transform transform = 4;
-    repeated CronusObject partitions = 2;
-    repeated CronusObject jobs = 5;
-    repeated CronusObject hists = 6;
-    repeated CronusObject logs = 7;
-    string storage_location = 8; // Alternative location for data, e.g. files, logs, protos
+  DatasetObjectAuxInfo aux = 1;
+  Transform transform = 4;
+  repeated CronusObject partitions = 2;
+  repeated CronusObject jobs = 5;
+  repeated CronusObject hists = 6;
+  repeated CronusObject logs = 7;
+  string storage_location = 8; // Alternative location for data, e.g. files, logs, protos
+// Provenance
+  repeated CronusObject parents = 9; 
+  repeated CronusObject children = 10;
 }
 
 message DatasetObjectAuxInfo {
-    string description = 1;
+  string description = 1;
 }
 
 message Transform {
@@ -175,98 +209,104 @@ message Transform {
 }
 
 message PartitionObjectInfo {
-    PartitionObjectAuxInfo aux = 1;
-    repeated CronusObject files = 2;
-    repeated CronusObject tables = 4;
-    // Merged Table representing common Schema for all files in partition
-    CronusObject table = 8;
-    string filestorepath = 9;
+  PartitionObjectAuxInfo aux = 1;
+  repeated CronusObject files = 2;
+  repeated CronusObject tables = 4;
+  // Merged Table representing common Schema for all files in partition
+  CronusObject table = 8;
+  string filestorepath = 9;
 }
 
 message PartitionObjectAuxInfo {
-    string description = 1;
+  string description = 1;
 }
 
 enum FileType {
-    NONE = 0;
-    CSV = 1;
-    FWF = 2;
-    JSON = 3;
-    PARQUET = 4;
-    ARROW = 5;
-    ARROW_STREAM = 6;
+  NONE = 0;
+  CSV = 1;
+  FWF = 2;
+  JSON = 3;
+  PARQUET = 4;
+  ARROW = 5;
+  ARROW_STREAM = 6;
 }
 
 message FileObjectInfo {
-    FileObjectAuxInfo aux = 1;
-    FileType type = 2;
-    int64 size_bytes = 3;
-    repeated Block blocks = 4;
+  FileObjectAuxInfo aux = 1;
+  FileType type = 2;
+  int64 size_bytes = 3;
+  repeated Block blocks = 4;
 }
 
 message FileObjectAuxInfo {
-    string description = 1;
-    int32 num_columns = 2;
-    int32 num_rows = 3;
-    int32 num_batches = 4;
+  string description = 1;
+  int32 num_columns = 2;
+  int32 num_rows = 3;
+  int32 num_batches = 4;
 
 }
 
 message Block {
-    int32 index = 1;
-    BlockInfo info = 2;
+  int32 index = 1;
+  BlockInfo info = 2;
 }
 
 message BlockInfo {
-    int64 size_bytes = 1;
-    int64 offset = 2;
-    int64 length = 3;
+  int64 size_bytes = 1;
+  int64 offset = 2;
+  int64 length = 3;
 }
 
 message TableObjectInfo {
-    TableObjectAuxInfo aux = 1;
-    Schema schema = 2;
+  TableObjectAuxInfo aux = 1;
+  Schema schema = 2;
 }
 
 message TableObjectAuxInfo {
-    string description = 1;
+  string description = 1;
 }
 
 message Schema {
-    string name = 1;
-    string uuid = 2;
-    SchemaInfo info = 3;
+  string name = 1;
+  string uuid = 2;
+  SchemaInfo info = 3;
 }
 
 message SchemaInfo {
-    SchemaAuxInfo aux = 1;
-    repeated Field fields = 2;
+  SchemaAuxInfo aux = 1;
+  repeated Field fields = 2;
 }
 
 message SchemaAuxInfo {
-    string description = 1;
-    bytes raw_header = 2;
-    bytes raw_footer = 3;
+  string description = 1;
+  bytes raw_header = 2;
+  bytes raw_footer = 3;
 }
 
 message Field {
-    string name = 1;
-    string uuid = 2;
-    FieldInfo info = 3;
+  string name = 1;
+  string uuid = 2;
+  FieldInfo info = 3;
 }
 
 message FieldInfo {
-    FieldAuxInfo aux = 1;
-    string type = 2;
-    bool nullable = 3;
-    repeated Field children = 4;
+  FieldAuxInfo aux = 1;
+  string type = 2;
+  bool nullable = 3;
+  repeated Field children = 4;
 }
 
 message FieldAuxInfo {
-    string description = 1;
-    map<string, string> meta = 2; 
+  string description = 1;
+  map<string, string> meta = 2; 
 }
 
+message DummyMessage {
+// Dummy protobuf acting as a real payload to write to storage
+// Given a CronusObject content addressed
+  string name = 1;
+  string description = 2;
+}
 /////////////////////////////////////
 
 

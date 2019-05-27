@@ -13,7 +13,7 @@ from pathlib import Path
 import uuid
 
 from cronus.io.protobuf.cronus_pb2 import CronusStore, CronusObject
-from cronus.io.protobuf cronus_pbs import DatasetObjectInfo
+from cronus.io.protobuf.cronus_pb2 import DatasetObjectInfo
 from cronus.logger import Logger
 from cronus.core.book import BaseBook
 
@@ -34,12 +34,19 @@ class BaseStore(BaseBook):
         elif msg is not None:
             self._load_from_msg(msg)
         elif info is not None:
-            self._store.info = 
+            self._store.info.CopyFrom(info)
+        else:
+            self.__logger.error("Must create an info object")
+            raise ValueError
+
         self._name = self._store.name
         self._uuid = self._store.uuid
+        self._parent_uuid = self._store.parent_uuid
         self._info = self._store.info
         self._aux = self._info.aux
+        self._path = Path(self._info.path) # must be an absolute path to location
         
+        self._child_stores = dict()
         objects = dict()
 
         for item in self._info.objects:
@@ -48,10 +55,15 @@ class BaseStore(BaseBook):
             if id_ is None:
                 self.__logger.error("Invalid UUID string")
                 raise ValueError
-            objects[item.name] = item.uuid
+            objects[item.uuid] = item
 
         super().__init__(objects)
     
+    def initialize(self):
+
+        for store in self._info.child_stores:
+            self._child_stores[store.name] = BaseStore()
+        
     @property
     def store_name(self):
         return self._name
@@ -79,32 +91,64 @@ class BaseStore(BaseBook):
             return uuid.UUID(id_)
         except ValueError:
             return None
+    
+    def register(self, content, extension=None):
+        '''
+        Returns the CronusObject content
+        '''
+        obj = CronusObject()
+        obj.name = extension
+        obj.uuid = str(uuid.uuid4())
+        obj.parent_uuid = self._uuid
+        obj.location = str(self._path / obj.uuid)
+        self[obj.uuid] = obj
+        return obj.uuid
 
-    def __setitem__(self, name, value):
+    def __setitem__(self, id_, msg):
         '''
         book[key] = value
-        enfore immutabible store
+        enfore immutible store
         '''
-        if name in self:
+        if id_ in self:
             self.__logger.error("Object already exists in store, requires unique key")
             raise ValueError
-        if not isinstance(name, str):
+        if not isinstance(id_, str):
             raise TypeError
-        if not isinstance(value, uuid.UUID) or not isinstance(value, str):
+        if not isinstance(msg, CronusObject):
             raise TypeError
         try:
-            self.register_object(name, value)
-        self._set(name, value)
+            self._register_object(id_, msg)
+        except Exception:
+            self.__logger.error("Cannot register new object in store")
+            raise
 
-    def _register_object(self, name, value):
-        id_ = str(value)
+        self._set(id_, msg)
+
+    def _register_object(self, id_, cronusobj):
+        #cronusobj.location = str(self._path / id_)
+        _address = Path(cronusobj.location)
+        if _address.exists() is True:
+            self.__logger.error("Object exists %s", _address)
+            raise FileExistsError
+        try:
+            _address.touch()
+            self.__logger.info("Created a new store file %s", _address)
+        except FileExistsError:
+            self.__logger.error("Cannot touch the new store file")
+            raise FileExistsError
     
-    def _put_object(self):
-        pass
+    def _put_object(self, id_, msg):
+        # Passes a protobug msg to be persisted to store location
+        _address = Path(self[id_].location)
+        try:
+            _address.write_bytes(msg.SerializeToString())
+        except FileNotFoundError:
+            self.__logger.error("Error writing store, file not created")
+            raise FileNotFoundError
 
-    def _get_object(self):
+    def _get_object(self, id_):
+        # retrieves a message from a store
         pass
-
 
 @Logger.logged
 class ArtemisSet(BaseStore):
