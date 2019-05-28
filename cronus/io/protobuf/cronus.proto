@@ -66,7 +66,7 @@ message CronusStoreInfo {
   // Enables multiple top-level stores to be created
   google.protobuf.Timestamp created = 2;
   CronusStoreAuxInfo aux = 3;
-  repeated CronusStore child_stores = 4;
+  repeated CronusObjectStore child_stores = 4;
 }
 
 message CronusStoreAuxInfo {

@@ -7,5 +7,6 @@ setup(name='cronus',
       packages=find_packages(),
       install_requires=[
             "protobuf",
+            "pyarrow>=0.13"
             ],
       description="Metastore for Artemis")

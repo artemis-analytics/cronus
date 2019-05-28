@@ -11,6 +11,9 @@ Interface to the Artemis Metadata Store
 """
 from pathlib import Path
 import uuid
+import hashlib
+
+import pyarrow as pa
 
 from cronus.io.protobuf.cronus_pb2 import CronusObjectStore, CronusObject
 from cronus.io.protobuf.cronus_pb2 import DatasetObjectInfo
@@ -21,7 +24,12 @@ from cronus.core.book import BaseBook
 @Logger.logged
 class BaseObjectStore(BaseBook):
     
-    def __init__(self, root, name, id_=None, msg=None): 
+    def __init__(self, 
+                 root, 
+                 name, 
+                 algorithm='sha1', 
+                 id_=None, 
+                 msg=None): 
         '''
         Loads a base store type 
         Requires a root path where the store resides
@@ -30,6 +38,7 @@ class BaseObjectStore(BaseBook):
         '''
         self._store = CronusObjectStore()
         self._root = Path(root)
+        self._algorithm = algorithm
         try:
             self._root = self._root.resolve()
         except FileNotFoundError:
@@ -43,11 +52,13 @@ class BaseObjectStore(BaseBook):
             raise
         
         if id_ is not None:
+            print("Loading from path") 
             self._load_from_path(id_)
             if name != self._store.name:
                 self.__logger.error("Name of store does not equal persisted store")
                 raise ValueError
         elif msg is not None:
+            print("Loading from message")
             # This loads child stores from the child store messages
             self._load_from_msg(msg)
         elif self._root.exists() is False:
@@ -59,6 +70,7 @@ class BaseObjectStore(BaseBook):
                 self.__logger.error("Cannot create %s", self._root)
                 raise
         else:
+            print("Creating a new store")
             self._store.uuid = uuid.uuid4()
             self._path / self._store.uuid
             try:
@@ -81,11 +93,7 @@ class BaseObjectStore(BaseBook):
         objects = dict()
 
         for item in self._info.objects:
-            # Convert back to uuid4
-            id_ = uuid.UUID(item.uuid)
-            if id_ is None:
-                self.__logger.error("Invalid UUID string")
-                raise ValueError
+            print(item.uuid)
             objects[item.uuid] = item
 
         super().__init__(objects)
@@ -110,6 +118,7 @@ class BaseObjectStore(BaseBook):
         self._store.CopyFrom(msg)
 
     def _load_from_path(self, id_): # pathlib.Path
+        self.__logger.info("Loading from path")
         path = self._root / id_
         if path.exists() is False:
             self.__logger.error("Root path does not exists")
@@ -123,17 +132,59 @@ class BaseObjectStore(BaseBook):
         except ValueError:
             return None
     
-    def register(self, content, extension=None):
+    def _compute_hash(self, stream):
+        hashobj = hashlib.new(self._algorithm)
+        hashobj.update(stream.read())
+        return hashobj.hexdigest()
+    
+    def save_store(self):
+        opath = self._path / self._uuid 
+        with pa.output_stream(str(opath)) as f:
+            f.write(self._store.SerializeToString())
+
+    def register_content(self, buf, extension=None):
         '''
-        Returns the CronusObject content
+        Returns the content identifier
+        content is the raw data, e.g. serialized bytestream to be persisted
+        hash the bytestream, see for example github.com/dgilland/hashfs
         '''
-        obj = CronusObject()
+        obj = self._store.info.objects.add()
         obj.name = extension
-        obj.uuid = str(uuid.uuid4())
+        # obj.uuid = str(uuid.uuid4())
+        stream = pa.input_stream(buf)
+        obj.uuid = self._compute_hash(stream)
         obj.parent_uuid = self._uuid
         obj.address = str(self._path / obj.uuid)
+        self._register_object(uuid,obj)
         self[obj.uuid] = obj
         return obj.uuid
+
+    def register_file(self, location):
+        '''
+        Returns the content identifier
+        for a file that is already in a store
+        Requires a stream as bytes
+        '''
+        location = str(location)
+        obj = self._store.info.objects.add() 
+        obj.name = extension
+        stream = pa.open_file(location)
+        obj.uuid = self._compute_hash(stream)
+        obj.parent_uuid = self._uuid
+        # Create a Path object, ensure that location points to a file
+        obj.address = str(location)
+        self._register_object(uuid,obj)
+        self[obj.uuid] = obj
+        return obj.uuid
+
+    def register_dir(self, location, glob):
+        '''
+        Registers a directory of files in a store
+        '''
+        ids_ = []
+        for file_ in Path(location).glob(glob):
+            ids_.append(self.register_file(file_))
+        return ids_
 
     def __setitem__(self, id_, msg):
         '''
@@ -147,11 +198,6 @@ class BaseObjectStore(BaseBook):
             raise TypeError
         if not isinstance(msg, CronusObject):
             raise TypeError
-        try:
-            self._register_object(id_, msg)
-        except Exception:
-            self.__logger.error("Cannot register new object in store")
-            raise
 
         self._set(id_, msg)
 
@@ -168,18 +214,31 @@ class BaseObjectStore(BaseBook):
             self.__logger.error("Cannot touch the new store file")
             raise FileExistsError
     
-    def _put_object(self, id_, msg):
-        # Passes a protobug msg to be persisted to store location
+    def _put_object(self, id_, buf):
+        # bytestream to persist 
         _address = Path(self[id_].address)
+        if _address.exists() is False:
+            raise FileNotFoundError
+        if _address.is_file() is False:
+            raise ValueError
         try:
-            _address.write_bytes(msg.SerializeToString())
+            with pa.output_stream(str(_address)) as f:
+                f.write(buf)
         except FileNotFoundError:
             self.__logger.error("Error writing store, file not created")
             raise FileNotFoundError
 
     def _get_object(self, id_):
         # retrieves a message from a store
-        pass
+        # returns as a py_arrow stream
+        # also must support pa.ipc.input_file
+        # Object may need to store the type, e.g. file, stream, ...
+        _address = Path(self[id_].address)
+        return pa.input_stream(str(_address)) 
+
+
+
+
 
 @Logger.logged
 class ArtemisSet(BaseObjectStore):
