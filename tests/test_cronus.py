@@ -16,8 +16,9 @@ import tempfile
 import os
 from pathlib import Path
 from cronus.core.cronus import Cronus
-from cronus.core.cronus import BaseStore
-from cronus.io.protobuf.cronus_pb2 import CronusStore, CronusObject, DummyMessage, FileObjectInfo
+from cronus.core.cronus import BaseObjectStore
+from cronus.io.protobuf.cronus_pb2 import CronusStore, CronusObjectStore, CronusObject
+from cronus.io.protobuf.cronus_pb2 import DummyMessage, FileObjectInfo
 import uuid
 
 logging.getLogger().setLevel(logging.INFO)
@@ -57,10 +58,10 @@ class CronusTestCase(unittest.TestCase):
         
 
         with tempfile.TemporaryDirectory() as dirpath:
-            mystore.info.path = dirpath+'/test'
-            _path = Path(mystore.info.path)
+            mystore.address = dirpath+'/test'
+            _path = Path(mystore.address)
             _path.mkdir()
-            store = BaseStore(msg = mystore) # wrapper to the CronusStore message
+            store = BaseObjectStore(msg = mystore) # wrapper to the CronusStore message
             store.initialize()  # Loads any children stores
             # Generate a CronusObject for content addressing mymsg
             #content = CronusObject()

@@ -12,32 +12,63 @@ Interface to the Artemis Metadata Store
 from pathlib import Path
 import uuid
 
-from cronus.io.protobuf.cronus_pb2 import CronusStore, CronusObject
+from cronus.io.protobuf.cronus_pb2 import CronusObjectStore, CronusObject
 from cronus.io.protobuf.cronus_pb2 import DatasetObjectInfo
 from cronus.logger import Logger
 from cronus.core.book import BaseBook
 
 
 @Logger.logged
-class BaseStore(BaseBook):
+class BaseObjectStore(BaseBook):
     
-    def __init__(self, 
-                 path=None, 
-                 msg=None, 
-                 info=None):
+    def __init__(self, root, name, id_=None, msg=None): 
         '''
         Loads a base store type 
+        Requires a root path where the store resides
+        Create a store from persisted data
+        Or create a new one
         '''
-        self._store = CronusStore()
-        if path is not None:
-            self._load_from_path(path)
+        self._store = CronusObjectStore()
+        self._root = Path(root)
+        try:
+            self._root = self._path.resolve()
+        except FileNotFoundError:
+            self.__logger.error("Absolute path does not exist")
+            raise
+        except RuntimeError:
+            self.__logger.error("Resolution error")
+            raise
+        except Exception:
+            self.__logger.error("Unknown error with path")
+            raise
+        
+        if id_ is not None:
+            self._load_from_path(id_)
+            if name != self._store.name:
+                self.__logger.error("Name of store does not equal persisted store")
+                raise ValueError
         elif msg is not None:
-            self._load_from_msg(msg)
-        elif info is not None:
-            self._store.info.CopyFrom(info)
+            # This loads child stores from the child store messages
+            self.load_from_msg(msg)
+        elif self._path.exists() is False:
+            self.__logger.info("Generating new store")
+            self.__logger.info("Creating root storage location %s", self._path)
+            try:
+                self._path.mkdir()
+            except Exception:
+                self.__logger.error("Cannot create %s", self._path)
+                raise
         else:
-            self.__logger.error("Must create an info object")
-            raise ValueError
+            self._store.uuid = uuid.uuid4()
+            self._path / self._store.uuid
+            try:
+                self._path.mkdir()
+            except FileExistsError:
+                self.__logger.error("Store exists %s", self._path)
+                raise
+            except FileExistsError:
+                self.__logger.error("Store already exists %s", self._path)
+                raise
 
         self._name = self._store.name
         self._uuid = self._store.uuid
@@ -45,7 +76,7 @@ class BaseStore(BaseBook):
         self._info = self._store.info
         self._aux = self._info.aux
         self._path = Path(self._info.path) # must be an absolute path to location
-        
+
         self._child_stores = dict()
         objects = dict()
 
@@ -59,11 +90,6 @@ class BaseStore(BaseBook):
 
         super().__init__(objects)
     
-    def initialize(self):
-
-        for store in self._info.child_stores:
-            self._child_stores[store.name] = BaseStore()
-        
     @property
     def store_name(self):
         return self._name
@@ -83,7 +109,12 @@ class BaseStore(BaseBook):
     def _load_from_msg(self, msg): # pathlib.Path
         self._store.CopyFrom(msg)
 
-    def _load_from_path(self, path): # pathlib.Path
+    def _load_from_path(self, id_): # pathlib.Path
+        path = self._root / id_
+        if path.exists() is False:
+            self.__logger.error("Root path does not exists")
+            raise FileNotFoundError
+
         self._store.ParseFromString(path.read_bytes())
     
     def _validate_uuid(self, id_):
@@ -151,7 +182,7 @@ class BaseStore(BaseBook):
         pass
 
 @Logger.logged
-class ArtemisSet(BaseStore):
+class ArtemisSet(BaseObjectStore):
     '''
     A Dataset metaobject for the output of Artemis
     Persisted Arrow Files and Table metadata can be stored
@@ -163,7 +194,7 @@ class ArtemisSet(BaseStore):
                  parent_path, 
                  parent_id):
 
-        self._ds = CronusStore()
+        self._ds = CronusObjectStore()
         self._ds.info = DatasetObjectInfo()
         self._is_raw = False  # Consume a raw file format dataset
         self._is_sim = False  # Consume a msg defining a simulation model
@@ -284,7 +315,7 @@ class Cronus():
                     files
                     tables
         '''
-        self._store = CronusStore()
+        self._store = CronusObjectStore()
         if self._store_exists(store, path):
             try:
                 spath = self._get_store(store, path)
@@ -314,7 +345,7 @@ class Cronus():
 
     @property
     def path(self):
-        return self._store.info.path
+        return self._store.address
 
     def _get_object(self,
                     store,
@@ -585,13 +616,13 @@ class Cronus():
             self.__logger.error("Cannot touch the new store file")
             raise FileExistsError
         try:
-            self._store.info.path = path
+            self._store.address = path
         except ValueError:
             self.__logger.error("Path not absolute")
             raise ValueError
 
     def _save_store(self):
-        p = Path(self._store.info.path)
+        p = Path(self._store.address)
         s = p / self._store.name / self._store.uuid
         try:
             s.write_bytes(self._store.SerializeToString())

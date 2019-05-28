@@ -51,7 +51,8 @@ message CronusStore {
   string name = 1;
   string uuid = 2;
   string parent_uuid = 3; // points to a parent store, if empty top-level store
-  CronusStoreInfo info = 4;
+  string address = 4;
+  CronusStoreInfo info = 5;
 }
 
 message CronusStoreInfo {
@@ -63,14 +64,38 @@ message CronusStoreInfo {
   // A store of Artemis datasets
   // Repeated list of CronusObjects -- persisted content addressed files/data
   // Enables multiple top-level stores to be created
-  string path = 1;
   google.protobuf.Timestamp created = 2;
   CronusStoreAuxInfo aux = 3;
   repeated CronusStore child_stores = 4;
-  repeated CronusObject objects = 5;
 }
 
 message CronusStoreAuxInfo {
+  string description = 1;
+}
+
+message CronusObjectStore {
+  string name = 1;
+  string uuid = 2;
+  string parent_uuid = 3; // points to a parent store, if empty top-level store
+  string address = 4;
+  CronusObjectStoreInfo info = 5;
+}
+
+message CronusObjectStoreInfo {
+  // Absolute location of a persisted store
+  // CronusStore can holds 
+  // Repeated list of childer stores
+  // A store of menus
+  // A store of Artemis configurations
+  // A store of Artemis datasets
+  // Repeated list of CronusObjects -- persisted content addressed files/data
+  // Enables multiple top-level stores to be created
+  google.protobuf.Timestamp created = 2;
+  CronusObjectStoreAuxInfo aux = 3;
+  repeated CronusObject objects = 5;
+}
+
+message CronusObjectStoreAuxInfo {
   string description = 1;
 }
 
@@ -81,7 +106,7 @@ message CronusObject {
   string name = 1;
   string uuid = 2;
   string parent_uuid = 3; // Points to parent store, must always be a parent
-  string location = 13; // Full path the underlying object resides
+  string address = 13; // Full path the underlying object resides
   oneof info {
     MenuObjectInfo menu = 4; // Statistical Business Process Model (Protobuf)
     ConfigObjectInfo config = 5; // Artemis Configuration Proto (Protobuf)
