@@ -50,7 +50,7 @@ class CronusTestCase(unittest.TestCase):
         mymsg.description = "really dumb"
 
         store_id = uuid.uuid4()
-        mystore = CronusStore()
+        mystore = CronusObjectStore()
         mystore.name = 'test'
         mystore.uuid = str(store_id)
         mystore.parent_uuid = '' # top level store
@@ -61,15 +61,14 @@ class CronusTestCase(unittest.TestCase):
             mystore.address = dirpath+'/test'
             _path = Path(mystore.address)
             _path.mkdir()
-            store = BaseObjectStore(msg = mystore) # wrapper to the CronusStore message
-            store.initialize()  # Loads any children stores
+            store = BaseObjectStore(str(_path), 'test', msg=mystore ) # wrapper to the CronusStore message
             # Generate a CronusObject for content addressing mymsg
             #content = CronusObject()
             #content.name = mymsg.name
             #content.uuid = str(uuid.uuid4())
             #store[content.uuid] = content
             id_ = store.register(mymsg, '.dummy.dat')
-            print(store[id_].location)
+            print(store[id_].address)
             store._put_object(id_, mymsg)
             # Add metadata
             fileinfo = FileObjectInfo()
@@ -79,7 +78,7 @@ class CronusTestCase(unittest.TestCase):
 
             # Retrieve
             altmsg = DummyMessage()
-            location = Path(store[id_].location)
+            location = Path(store[id_].address)
             print(location)
             altmsg.ParseFromString(location.read_bytes())
             self.assertEqual(mymsg.name, altmsg.name)

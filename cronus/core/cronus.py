@@ -31,7 +31,7 @@ class BaseObjectStore(BaseBook):
         self._store = CronusObjectStore()
         self._root = Path(root)
         try:
-            self._root = self._path.resolve()
+            self._root = self._root.resolve()
         except FileNotFoundError:
             self.__logger.error("Absolute path does not exist")
             raise
@@ -49,14 +49,14 @@ class BaseObjectStore(BaseBook):
                 raise ValueError
         elif msg is not None:
             # This loads child stores from the child store messages
-            self.load_from_msg(msg)
-        elif self._path.exists() is False:
+            self._load_from_msg(msg)
+        elif self._root.exists() is False:
             self.__logger.info("Generating new store")
-            self.__logger.info("Creating root storage location %s", self._path)
+            self.__logger.info("Creating root storage location %s", self._root)
             try:
-                self._path.mkdir()
+                self._root.mkdir()
             except Exception:
-                self.__logger.error("Cannot create %s", self._path)
+                self.__logger.error("Cannot create %s", self._root)
                 raise
         else:
             self._store.uuid = uuid.uuid4()
@@ -75,7 +75,7 @@ class BaseObjectStore(BaseBook):
         self._parent_uuid = self._store.parent_uuid
         self._info = self._store.info
         self._aux = self._info.aux
-        self._path = Path(self._info.path) # must be an absolute path to location
+        self._path = Path(self._store.address) # must be an absolute path to location
 
         self._child_stores = dict()
         objects = dict()
@@ -131,7 +131,7 @@ class BaseObjectStore(BaseBook):
         obj.name = extension
         obj.uuid = str(uuid.uuid4())
         obj.parent_uuid = self._uuid
-        obj.location = str(self._path / obj.uuid)
+        obj.address = str(self._path / obj.uuid)
         self[obj.uuid] = obj
         return obj.uuid
 
@@ -157,7 +157,7 @@ class BaseObjectStore(BaseBook):
 
     def _register_object(self, id_, cronusobj):
         #cronusobj.location = str(self._path / id_)
-        _address = Path(cronusobj.location)
+        _address = Path(cronusobj.address)
         if _address.exists() is True:
             self.__logger.error("Object exists %s", _address)
             raise FileExistsError
@@ -170,7 +170,7 @@ class BaseObjectStore(BaseBook):
     
     def _put_object(self, id_, msg):
         # Passes a protobug msg to be persisted to store location
-        _address = Path(self[id_].location)
+        _address = Path(self[id_].address)
         try:
             _address.write_bytes(msg.SerializeToString())
         except FileNotFoundError:
