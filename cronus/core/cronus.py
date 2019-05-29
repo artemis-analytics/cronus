@@ -12,13 +12,41 @@ Interface to the Artemis Metadata Store
 from pathlib import Path
 import uuid
 import hashlib
+import urllib.parse
+from dataclasses import dataclass
 
 import pyarrow as pa
+from storefact import get_store_from_url, get_store
+# from simplekv.fs import FilesystemStore
 
 from cronus.io.protobuf.cronus_pb2 import CronusObjectStore, CronusObject
-from cronus.io.protobuf.cronus_pb2 import DatasetObjectInfo
 from cronus.logger import Logger
 from cronus.core.book import BaseBook
+
+# Import all the info objects to set the oneof of a CronusObject
+# Annoying boiler plate 
+from cronus.io.protobuf.cronus_pb2 import MenuObjectInfo, \
+        ConfigObjectInfo, \
+        DatasetObjectInfo, \
+        HistsObjectInfo, \
+        JobObjectInfo, \
+        LogObjectInfo, \
+        PartitionObjectInfo, \
+        FileObjectInfo, \
+        TableObjectInfo
+
+@dataclass
+class MetaObject:
+    '''
+    Helper data class for accessing a content object metadata
+    The returned class does not give access to the original protobuf
+    that is only accesible via uuid (content's hash)
+    '''
+
+    name: str
+    uuid: str
+    parent_uuid: str
+    address: str
 
 
 @Logger.logged
@@ -26,7 +54,8 @@ class BaseObjectStore(BaseBook):
     
     def __init__(self, 
                  root, 
-                 name, 
+                 name,
+                 storetype='hfs',
                  algorithm='sha1', 
                  id_=None, 
                  msg=None): 
@@ -36,7 +65,8 @@ class BaseObjectStore(BaseBook):
         Create a store from persisted data
         Or create a new one
         '''
-        self._store = CronusObjectStore()
+        self._mstore = CronusObjectStore()
+        self._dstore = get_store_from_url(f"{storetype}://{root}")
         self._root = Path(root)
         self._algorithm = algorithm
         try:
@@ -54,7 +84,7 @@ class BaseObjectStore(BaseBook):
         if id_ is not None:
             print("Loading from path") 
             self._load_from_path(id_)
-            if name != self._store.name:
+            if name != self._mstore.name:
                 self.__logger.error("Name of store does not equal persisted store")
                 raise ValueError
         elif msg is not None:
@@ -71,8 +101,8 @@ class BaseObjectStore(BaseBook):
                 raise
         else:
             print("Creating a new store")
-            self._store.uuid = uuid.uuid4()
-            self._path / self._store.uuid
+            self._mstore.uuid = uuid.uuid4()
+            self._path / self._mstore.uuid
             try:
                 self._path.mkdir()
             except FileExistsError:
@@ -82,14 +112,16 @@ class BaseObjectStore(BaseBook):
                 self.__logger.error("Store already exists %s", self._path)
                 raise
 
-        self._name = self._store.name
-        self._uuid = self._store.uuid
-        self._parent_uuid = self._store.parent_uuid
-        self._info = self._store.info
+        self._name = self._mstore.name
+        self._uuid = self._mstore.uuid
+        self._parent_uuid = self._mstore.parent_uuid
+        self._info = self._mstore.info
         self._aux = self._info.aux
-        self._path = Path(self._store.address) # must be an absolute path to location
-
+        self._path = Path(self._mstore.address) # must be an absolute path to location
+        
+        self._dups = dict()
         self._child_stores = dict()
+        
         objects = dict()
 
         for item in self._info.objects:
@@ -115,16 +147,19 @@ class BaseObjectStore(BaseBook):
         return self._aux
    
     def _load_from_msg(self, msg): # pathlib.Path
-        self._store.CopyFrom(msg)
+        self._mstore.CopyFrom(msg)
 
     def _load_from_path(self, id_): # pathlib.Path
         self.__logger.info("Loading from path")
-        path = self._root / id_
-        if path.exists() is False:
-            self.__logger.error("Root path does not exists")
-            raise FileNotFoundError
-
-        self._store.ParseFromString(path.read_bytes())
+        try:
+            buf = self._dstore.get(id_)
+        except FileNotFoundError:
+            self.__logger.error("Metastore data not found")
+            raise
+        except Exception:
+            self.__logger.error("Unknown error")
+            raise
+        self._mstore.ParseFromString(buf)
     
     def _validate_uuid(self, id_):
         try:
@@ -137,54 +172,104 @@ class BaseObjectStore(BaseBook):
         hashobj.update(stream.read())
         return hashobj.hexdigest()
     
-    def save_store(self):
-        opath = self._path / self._uuid 
-        with pa.output_stream(str(opath)) as f:
-            f.write(self._store.SerializeToString())
+    def _register_object(self, obj):
+        '''
+        Identical files will generate same as
+        while we should not support duplicate data
+        could there be a reason?
 
-    def register_content(self, buf, extension=None):
+        check that uuid is not in the store
+        if so, create a counter extension to the uuid
+        '''
+        pass
+
+    def save_store(self):
+        buf = self._mstore.SerializeToString()
+        self._dstore.put(self._uuid, buf)
+    
+    def _set_object_info(self, obj, info):
+        '''
+        '''
+        if isinstance(info, FileObjectInfo):
+            obj.file.CopyFrom(info)
+        elif isinstance(info, MenuObjectInfo):
+            obj.menu.CopyFrom(info)
+        elif isinstance(info, ConfigObjectInfo):
+            obj.config.CopyFrom(info)
+        elif isinstance(info, DatasetObjectInfo):
+            obj.dataset.CopyFrom(info)
+        elif isinstance(info, HistsObjectInfo):
+            obj.hists.CopyFrom(info)
+        elif isinstance(info, JobObjectInfo):
+            obj.job.CopyFrom(info)
+        elif isinstance(info, LogObjectInfo):
+            obj.log.CopyFrom(info)
+        elif isinstance(info, TableObjectInfo):
+            obj.table.CopyFrom(info)
+        elif isinstance(info, ParitionObjectInfo):
+            obj.partition.CopyFrom(info)
+        else:
+            self.__logger.error("Unknown info object")
+            raise ValueError
+            
+    
+    def register_content(self, buf, info, extension=''):
         '''
         Returns the content identifier
         content is the raw data, e.g. serialized bytestream to be persisted
         hash the bytestream, see for example github.com/dgilland/hashfs
         '''
-        obj = self._store.info.objects.add()
+        obj = self._mstore.info.objects.add()
         obj.name = extension
-        # obj.uuid = str(uuid.uuid4())
-        stream = pa.input_stream(buf)
-        obj.uuid = self._compute_hash(stream)
+        obj.uuid = self._compute_hash(pa.input_stream(buf))
         obj.parent_uuid = self._uuid
-        obj.address = str(self._path / obj.uuid)
-        self._register_object(uuid,obj)
+        
+        # New data, get a url from the datastore
+        obj.address = self._dstore.url_for(obj.uuid)
+        self.__logger.info("Retrieving url %s", obj.address)
+        self._set_object_info(obj, info)
+        # self._register_object(uuid,obj)
         self[obj.uuid] = obj
-        return obj.uuid
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def register_file(self, location):
+    def register_file(self, location, info, extension=''):
         '''
         Returns the content identifier
         for a file that is already in a store
         Requires a stream as bytes
         '''
-        location = str(location)
-        obj = self._store.info.objects.add() 
+        path = Path(location)
+        if path.is_absolute() is False:
+            path = path.resolve()
+        obj = self._mstore.info.objects.add() 
         obj.name = extension
-        stream = pa.open_file(location)
-        obj.uuid = self._compute_hash(stream)
+        obj.uuid = self._compute_hash(pa.input_stream(str(path)))
+        #obj.uuid = extension
         obj.parent_uuid = self._uuid
         # Create a Path object, ensure that location points to a file
-        obj.address = str(location)
-        self._register_object(uuid,obj)
-        self[obj.uuid] = obj
-        return obj.uuid
+        # Since we are using simplekv, new objects always registers as url
+        # So make a file path as url
+        obj.address = path.as_uri() # self._dstore.url_for(extension)
+        self._set_object_info(obj, info)
 
-    def register_dir(self, location, glob):
+        if obj.uuid in self:
+            if obj.uuid in self._dups:
+                self._dups[obj.uuid] += 1
+            else:
+                self._dups[obj.uuid] = 0
+            obj.uuid = obj.uuid + '_' + str(self._dups[obj.uuid])
+
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+
+    def register_dir(self, location, glob, info):
         '''
         Registers a directory of files in a store
         '''
-        ids_ = []
+        objs = []
         for file_ in Path(location).glob(glob):
-            ids_.append(self.register_file(file_))
-        return ids_
+            objs.append(self.register_file(file_, info))
+        return objs
 
     def __setitem__(self, id_, msg):
         '''
@@ -200,41 +285,59 @@ class BaseObjectStore(BaseBook):
             raise TypeError
 
         self._set(id_, msg)
-
-    def _register_object(self, id_, cronusobj):
-        #cronusobj.location = str(self._path / id_)
-        _address = Path(cronusobj.address)
-        if _address.exists() is True:
-            self.__logger.error("Object exists %s", _address)
-            raise FileExistsError
-        try:
-            _address.touch()
-            self.__logger.info("Created a new store file %s", _address)
-        except FileExistsError:
-            self.__logger.error("Cannot touch the new store file")
-            raise FileExistsError
     
     def _put_object(self, id_, buf):
-        # bytestream to persist 
-        _address = Path(self[id_].address)
-        if _address.exists() is False:
-            raise FileNotFoundError
-        if _address.is_file() is False:
-            raise ValueError
+        # bytestream to persist
         try:
-            with pa.output_stream(str(_address)) as f:
-                f.write(buf)
-        except FileNotFoundError:
-            self.__logger.error("Error writing store, file not created")
-            raise FileNotFoundError
+            self._dstore.put(id_, buf.to_pybytes())
+        except Exception:
+            self.__logger.error("Error persisting to datastore %s", self[id_].address)
+        #_address = Path(self[id_].address)
+        #if _address.exists() is False:
+        #    raise FileNotFoundError
+        #if _address.is_file() is False:
+        #    raise ValueError
+        #try:
+        #    with pa.output_stream(str(_address)) as f:
+        #        f.write(buf)
+        #except FileNotFoundError:
+        #    self.__logger.error("Error writing store, file not created")
+        #    raise FileNotFoundError
 
     def _get_object(self, id_):
+        # get object will read object into memory buffer
+        # return
         # retrieves a message from a store
         # returns as a py_arrow stream
         # also must support pa.ipc.input_file
         # Object may need to store the type, e.g. file, stream, ...
-        _address = Path(self[id_].address)
-        return pa.input_stream(str(_address)) 
+        #_address = Path(self[id_].address)
+        #return pa.input_stream(str(_address))
+        try:
+            return self._dstore.get(id_)
+        except KeyError:
+            # File resides outside of kv store 
+            # Used for registering files already existing in persistent storage
+            return pa.input_stream(self._parse_url(id_)).read()
+    
+    def _parse_url(self, id_):
+        url_data = urllib.parse.urlparse(self[id_].address)
+        return urllib.parse.unquote(url_data.path)
+
+    def _open_object(self, id_):
+        # Returns pyarrow io handle
+        if self[id_].WhichOneof('info') == 'file':
+            # Arrow RecordBatchFile
+            if self[id_].file.type == 5:
+                # Convert the url to path
+                return pa.ipc.open_file(self._parse_url(id_))
+            # Arrow RecordBatchStream
+            elif self[id_].file.type == 6:
+                pa.ipc.open_stream(self[id_].address)
+            else:
+                return pa.input_stream(self[id_].address)
+        else:
+            return pa.input_stream(self[id_].address)
 
 
 
