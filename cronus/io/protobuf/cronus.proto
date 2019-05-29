@@ -223,6 +223,7 @@ message DatasetObjectInfo {
   repeated CronusObject parents = 9; 
   repeated CronusObject children = 10;
 }
+// Register the content of a dataset in the object store
 
 message DatasetObjectAuxInfo {
   string description = 1;

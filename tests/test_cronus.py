@@ -15,6 +15,7 @@ import logging
 import tempfile
 import os
 import hashlib
+import datetime
 from pathlib import Path
 import pyarrow as pa
 from cronus.core.cronus import Cronus
@@ -51,25 +52,11 @@ class CronusTestCase(unittest.TestCase):
         mymsg.name = "dummy"
         mymsg.description = "really dumb"
 
-        store_id = uuid.uuid4()
-        mystore = CronusObjectStore()
-        mystore.name = 'test'
-        mystore.uuid = str(store_id)
-        mystore.parent_uuid = '' # top level store
-
-        
-
         with tempfile.TemporaryDirectory() as dirpath:
-            mystore.address = dirpath+'/test'
-            _path = Path(mystore.address)
-            _path.mkdir()
-            store = BaseObjectStore(str(_path), 'test', msg=mystore ) # wrapper to the CronusStore message
-            # Generate a CronusObject for content addressing mymsg
-            #content = CronusObject()
-            #content.name = mymsg.name
-            #content.uuid = str(uuid.uuid4())
-            #store[content.uuid] = content
-
+            _path = dirpath+'/test'
+            store = BaseObjectStore(str(_path), 'test')  
+            store_id = store.store_uuid
+            print(store.store_info.created.ToDatetime())
             buf = pa.py_buffer(mymsg.SerializeToString())
             stream = pa.input_stream(buf)
             print(type(stream))
@@ -79,8 +66,6 @@ class CronusTestCase(unittest.TestCase):
             id_ = store.register_content(buf, fileinfo, '.dummy.dat').uuid
             print(store[id_].address)
             store._put_object(id_, buf) 
-            # Add metadata
-            #store[id_].file.CopyFrom(fileinfo)
 
             # Retrieve
             altmsg = DummyMessage()
@@ -107,7 +92,7 @@ class CronusTestCase(unittest.TestCase):
                 print(obj.uuid)
 
             store.save_store()
-            new_store = BaseObjectStore(str(_path), 'test', id_=str(store_id))
+            new_store = BaseObjectStore(str(_path), 'test', store_uuid=str(store_id))
             _input = new_store._get_object(id_)
             _input = store._get_object(id_)
             altmsg.ParseFromString(_input)
@@ -135,20 +120,11 @@ class CronusTestCase(unittest.TestCase):
         mymsg = DummyMessage()
         mymsg.name = "dummy"
         mymsg.description = "really dumb"
-
-        store_id = uuid.uuid4()
-        mystore = CronusObjectStore()
-        mystore.name = 'test'
-        mystore.uuid = str(store_id)
-        mystore.parent_uuid = '' # top level store
-
         
 
         with tempfile.TemporaryDirectory() as dirpath:
-            mystore.address = dirpath+'/test'
-            _path = Path(mystore.address)
-            _path.mkdir()
-            store = BaseObjectStore(str(_path), 'test', msg=mystore ) # wrapper to the CronusStore message
+            _path = dirpath+'/test'
+            store = BaseObjectStore(str(_path), 'test') # wrapper to the CronusStore message
             fileinfo = FileObjectInfo()
             fileinfo.type = 5
             fileinfo.aux.description = 'Some dummy data'
@@ -161,7 +137,7 @@ class CronusTestCase(unittest.TestCase):
 
             reader = store._open_object(id_)
             self.assertEqual(reader.num_record_batches, 10)
-
+    
     def test_register_file(self):
         data = [
                 pa.array([1, 2, 3, 4]),
@@ -181,19 +157,10 @@ class CronusTestCase(unittest.TestCase):
         mymsg.name = "dummy"
         mymsg.description = "really dumb"
 
-        store_id = uuid.uuid4()
-        mystore = CronusObjectStore()
-        mystore.name = 'test'
-        mystore.uuid = str(store_id)
-        mystore.parent_uuid = '' # top level store
-
-        
 
         with tempfile.TemporaryDirectory() as dirpath:
-            mystore.address = dirpath+'/test'
-            _path = Path(mystore.address)
-            _path.mkdir()
-            store = BaseObjectStore(str(_path), 'test', msg=mystore ) # wrapper to the CronusStore message
+            _path = dirpath+'/test'
+            store = BaseObjectStore(str(_path), 'test') # wrapper to the CronusStore message
             fileinfo = FileObjectInfo()
             fileinfo.type = 5
             fileinfo.aux.description = 'Some dummy data'
@@ -227,19 +194,9 @@ class CronusTestCase(unittest.TestCase):
         mymsg.name = "dummy"
         mymsg.description = "really dumb"
 
-        store_id = uuid.uuid4()
-        mystore = CronusObjectStore()
-        mystore.name = 'test'
-        mystore.uuid = str(store_id)
-        mystore.parent_uuid = '' # top level store
-
-        
-
         with tempfile.TemporaryDirectory() as dirpath:
-            mystore.address = dirpath+'/test'
-            _path = Path(mystore.address)
-            _path.mkdir()
-            store = BaseObjectStore(str(_path), 'test', msg=mystore ) # wrapper to the CronusStore message
+            _path = dirpath+'/test'
+            store = BaseObjectStore(str(_path), 'test') # wrapper to the CronusStore message
             fileinfo = FileObjectInfo()
             fileinfo.type = 5
             fileinfo.aux.description = 'Some dummy data'
@@ -296,7 +253,7 @@ class CronusTestCase(unittest.TestCase):
             mystore.address = dirpath+'/test'
             _path = Path(mystore.address)
             _path.mkdir()
-            store = BaseObjectStore(str(_path), 'test', msg=mystore ) # wrapper to the CronusStore message
+            store = BaseObjectStore(str(_path), 'test') # wrapper to the CronusStore message
             fileinfo = FileObjectInfo()
             fileinfo.type = 5
             fileinfo.aux.description = 'Some dummy data'
