@@ -58,7 +58,8 @@ class BaseObjectStore(BaseBook):
                  name,
                  store_uuid=None,
                  storetype='hfs',
-                 algorithm='sha1'):
+                 algorithm='sha1',
+                 alt_root=None):
         '''
         Loads a base store type
         Requires a root path where the store resides
@@ -67,18 +68,27 @@ class BaseObjectStore(BaseBook):
         '''
         self._mstore = CronusObjectStore()
         self._dstore = get_store_from_url(f"{storetype}://{root}")
+        self._alt_dstore = None
+        if alt_root is not None:
+            self.__logger.info("Create alternative data store location")
+            self._alt_dstore = get_store_from_url(f"{storetype}://{alt_root}")
         self._algorithm = algorithm
         if store_uuid is None:
             # Generate a new store
+            self.__logger.info("Generating new metastore")
+            
             self._mstore.uuid = str(uuid.uuid4())
             self._mstore.address = self._dstore.url_for(self._mstore.uuid)
             self._mstore.name = name
             self._mstore.info.created.GetCurrentTime()
+            self.__logger.info("Metastore ID %s", self._mstore.uuid)
+            self.__logger.info("Storage location %s", self._mstore.address)
+            self.__logger.info("Created on %s", self._mstore.info.created.ToDatetime())
         elif store_uuid in self._dstore:
-            print("Loading from path")
+            self.__logger.info("Load metastore from path")
             self._load_from_path(name, store_uuid)
         else:
-            print("Cannot retrieve store")
+            self.__logger.error("Cannot retrieve metastore: %s from datastore %s", store_uuid, root)
             raise KeyError
 
         self._name = self._mstore.name
@@ -93,7 +103,7 @@ class BaseObjectStore(BaseBook):
         objects = dict()
 
         for item in self._info.objects:
-            print(item.uuid)
+            self.__logger.debug("Loading object %s", item.uuid)
             objects[item.uuid] = item
 
         super().__init__(objects)
@@ -174,6 +184,52 @@ class BaseObjectStore(BaseBook):
         else:
             self.__logger.error("Unknown info object")
             raise ValueError
+    
+    def _register_content_type(self):
+        '''
+        Menu metadata
+            Menu protobug
+        Configuration metadata
+            config protobuf
+        Dataset metadata
+            Dataset protobuf
+            Log file
+            Hists protobuf
+            Job protobuf
+            Partition
+                Data file
+                Table (Schema) protobuf
+        '''
+        pass
+        
+
+    def _register_menu(self, buf, menuinfo):
+        pass
+
+    def _register_config(self, buf, configinfo):
+        pass
+
+    def _register_dataset(self, buf, datasetinfo, menu_id, config_id):
+        pass
+
+    def _register_partition(self, buf, paritioninfo, partition_key):
+        pass
+
+    def _register_partition_table(self, buf, tableinfo, parition_key):
+        pass
+
+    def _register_partition_file(self, buf, fileinfo, partition_key):
+        pass
+
+    def _register_log(self, buf, loginfo, dataset_id):
+        pass
+
+    def _register_hists(self, buf, histsinfo, dataset_id):
+        pass
+
+    def _register_job(self, buf, jobinfo, dataset_id):
+        pass
+
 
     def register_content(self, buf, info, extension=''):
         '''
