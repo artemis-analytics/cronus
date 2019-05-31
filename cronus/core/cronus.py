@@ -140,21 +140,6 @@ class BaseObjectStore(BaseBook):
             self.__logger.error("Name of store does not equal persisted store")
             raise ValueError
 
-    def _compute_hash(self, stream):
-        hashobj = hashlib.new(self._algorithm)
-        hashobj.update(stream.read())
-        return hashobj.hexdigest()
-
-    def _register_object(self, obj):
-        '''
-        Identical files will generate same as
-        while we should not support duplicate data
-        could there be a reason?
-
-        check that uuid is not in the store
-        if so, create a counter extension to the uuid
-        '''
-        pass
 
     def save_store(self):
         buf = self._mstore.SerializeToString()
@@ -201,7 +186,6 @@ class BaseObjectStore(BaseBook):
                 Table (Schema) protobuf
         '''
         pass
-        
 
     def _register_menu(self, buf, menuinfo):
         pass
@@ -210,47 +194,140 @@ class BaseObjectStore(BaseBook):
         pass
 
     def _register_dataset(self, buf, datasetinfo, menu_id, config_id):
-        pass
+        '''
+        dataset uuid
+        '''
 
     def _register_partition(self, buf, paritioninfo, partition_key):
-        pass
+        '''
+        dataset id
+        partition key from menu -- corresponds to leaf name
+        '''
 
     def _register_partition_table(self, buf, tableinfo, parition_key):
+        '''
+        dataset uuid
+        partition key
+        job key
+        file uuid
+        '''
         pass
 
     def _register_partition_file(self, buf, fileinfo, partition_key):
+        '''
+        Requires 
+        dataset uuid
+        partition key
+        job key
+        file uuid
+        '''
         pass
 
     def _register_log(self, buf, loginfo, dataset_id):
+        '''
+        Requires 
+        uuid of dataset
+        generate a hists uuid from buffer
+        job key common to all jobs in a dataset
+        keep an running index of hists?
+        extension hists.data
+        dataset_id.job_name.log_id.dat
+        '''
+        obj = self[dataset_id].info.logs.add()
         pass
 
     def _register_hists(self, buf, histsinfo, dataset_id):
+        '''
+        Requires 
+        uuid of dataset
+        generate a hists uuid from buffer
+        job key common to all jobs in a dataset
+        keep an running index of hists?
+        extension hists.data
+        dataset_id.job_name.hists_id.dat
+        '''
+        obj = self[dataset_id].info.hists.add()
         pass
 
     def _register_job(self, buf, jobinfo, dataset_id):
+        '''
+        Requires 
+        uuid of dataset
+        generate a job uuid from buffer
+        job_name key common to all jobs in a dataset
+        keep an running index of jobs?
+        extension job.dat
+        dataset_id.job_name.job_id.dat
+        '''
+        obj = self[dataset_id].info.jobs.add()
         pass
-
-
-    def register_content(self, buf, info, extension=''):
+    
+    def _build_name(self, buf, info):
+        return ''
+    
+    def register_content(self, buf, info, 
+                         dataset_uuid=None, 
+                         job_id=None, 
+                         partition_key=None):
         '''
         Returns the content identifier
         content is the raw data, e.g. serialized bytestream to be persisted
         hash the bytestream, see for example github.com/dgilland/hashfs
+
+        info object can be used to call the correct
+        register method and validate all the required inputs are received
+
+        Parameters
+        ----------
+        buf : bytestream, object ready to be persisted
+        info : associated metadata object describing the content of buf
+
+
+        Optional
+        --------
+        dataset uuid : required for logs, files, tables, histst
+        job_name or job_uuid
+        partition_key : required for files and tables
         '''
         self.__logger.info("register")
         obj = self._mstore.info.objects.add()
-        obj.name = extension
+        obj.name = self._build_name(buf, info)
         obj.uuid = self._compute_hash(pa.input_stream(buf))
         obj.parent_uuid = self._uuid
         # New data, get a url from the datastore
         obj.address = self._dstore.url_for(obj.uuid)
         self.__logger.info("Retrieving url %s", obj.address)
-        print(obj.address)
         self._set_object_info(obj, info)
         # self._register_object(uuid,obj)
         self[obj.uuid] = obj
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
+    def _compute_hash(self, stream):
+        hashobj = hashlib.new(self._algorithm)
+        hashobj.update(stream.read())
+        return hashobj.hexdigest()
+
+    def _register_object(self, obj):
+        '''
+        Identical files will generate same as
+        while we should not support duplicate data
+        could there be a reason?
+
+        check that uuid is not in the store
+        if so, create a counter extension to the uuid
+        
+        compute object hash
+        check for duplicates and increment count
+            duplicates not expected for artemis outputs
+        check info object type
+        validate kwargs
+        set any metadata from info or kwargs -- use info objects to contain
+            correct data to build the file name?
+
+        '''
+        pass
+        
+    
     def register_file(self, location, info, extension=''):
         '''
         Returns the content identifier
@@ -295,7 +372,7 @@ class BaseObjectStore(BaseBook):
         enfore immutible store
         '''
         if id_ in self:
-            self.__logger.error("Object already exists in store, requires unique key")
+            self.__logger.error("Key exists %s", id_)
             raise ValueError
         if not isinstance(id_, str):
             raise TypeError
@@ -308,30 +385,28 @@ class BaseObjectStore(BaseBook):
         # bytestream to persist
         try:
             self._dstore.put(id_, buf.to_pybytes())
+        except IOError:
+            self.__logger.error("IO error %s", self[id_].address)
+            raise
         except Exception:
-            self.__logger.error("Error persisting to datastore %s", self[id_].address)
+            self.__logger.error("Unknown error put %s", self[id_].address)
+            raise
 
     def _get_object(self, id_):
         # get object will read object into memory buffer
         try:
             return self._dstore.get(id_)
         except KeyError:
-            # File resides outside of kv store 
+            # File resides outside of kv store
             # Used for registering files already existing in persistent storage
             return pa.input_stream(self._parse_url(id_)).read()
-   
+
     def _parse_url(self, id_):
-        print("parse url")
         url_data = urllib.parse.urlparse(self[id_].address)
-        print(url_data.path)
         return urllib.parse.unquote(url_data.path)
 
     def _open_object(self, id_):
         # Returns pyarrow io handle
-        location = Path(self._parse_url(id_))
-        print("Is dir", location.is_dir())
-        print("Is File", location.is_file())
-        print(self[id_].address)
         if self[id_].WhichOneof('info') == 'file':
             # Arrow RecordBatchFile
             if self[id_].file.type == 5:
