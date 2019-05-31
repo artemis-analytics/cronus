@@ -170,7 +170,7 @@ class BaseObjectStore(BaseBook):
             self.__logger.error("Unknown info object")
             raise ValueError
     
-    def _register_content_type(self):
+    def _register_content_type(self, buf, info, **kwargs):
         '''
         Menu metadata
             Menu protobug
@@ -185,35 +185,123 @@ class BaseObjectStore(BaseBook):
                 Data file
                 Table (Schema) protobuf
         '''
-        pass
+        metaobj = None
+        if isinstance(info, FileObjectInfo):
+            dataset_id = kwargs['dataset_id']
+            partition_key = kwargs['partition_key']
+            metaobj = self._register_partition_file(buf, info, dataset_id, partition_key) 
+        elif isinstance(info, MenuObjectInfo):
+            metaobj = self._register_menu(buf, info)
+        elif isinstance(info, ConfigObjectInfo):
+            metaobj = self._register_config(buf, info)
+        elif isinstance(info, DatasetObjectInfo):
+            metaobj = self._register_dataset(**kwargs) 
+        elif isinstance(info, HistsObjectInfo):
+            obj.hists.CopyFrom(info)
+        elif isinstance(info, JobObjectInfo):
+            obj.job.CopyFrom(info)
+        elif isinstance(info, LogObjectInfo):
+            obj.log.CopyFrom(info)
+        elif isinstance(info, TableObjectInfo):
+            metaobj = self._register_partition_table(buf, info, **kwargs) 
+        else:
+            self.__logger.error("Unknown info object")
+            raise ValueError
+        return metaobj
 
     def _register_menu(self, buf, menuinfo):
-        pass
+        self.__logger.info("Registering menu object")
+        
+        obj = self._mstore.info.objects.add()
+         
+        obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.parent_uuid = self._uuid
+        obj.name = obj.uuid + '.menu.dat'
+        # New data, get a url from the datastore
+        obj.address = self._dstore.url_for(obj.name)
+        self.__logger.info("Retrieving url %s", obj.address)
+        
+        # Copy the info object
+        obj.menu.CopyFrom(menuinfo)
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+        
 
     def _register_config(self, buf, configinfo):
-        pass
-
-    def _register_dataset(self, buf, datasetinfo, menu_id, config_id):
         '''
-        dataset uuid
+        Takes a config protbuf bytestream
         '''
+        self.__logger.info("Registering config object")
+        
+        obj = self._mstore.info.objects.add()
+        
+        obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.parent_uuid = self._uuid
+        obj.name = obj.uuid + '.config.dat' 
+        # New data, get a url from the datastore
+        obj.address = self._dstore.url_for(obj.name)
+        self.__logger.info("Retrieving url %s", obj.address)
+        
+        # Copy the info object
+        obj.config.CopyFrom(configinfo)
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def _register_partition(self, buf, paritioninfo, partition_key):
+    def _register_dataset(self, menu_id, config_id):
+        '''
+        dataset creation
+        occurs before persisting storing information
+        works as a datasink 
+        Datasets are not a persisted object in the datastore
+        '''
+        obj = self._mstore.info.objects.add()
+        obj.uuid = str(uuid.uuid4())  # Register new datsets with UUID4
+        obj.parent_uuid = self._uuid
+        obj.name = obj.uuid + '.dataset'
+
+        # Set the transform objects, assumes menu, config and datasets
+        # all reside in one store
+        obj.dataset.transform.menu.CopyFrom(self[menu_id])
+        obj.dataset.transform.config.CopyFrom(self[config_id])
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+
+    def _register_partition(self, dataset_id, partition_key):
         '''
         dataset id
         partition key from menu -- corresponds to leaf name
         '''
+        partition = dataset_id + '.partition.' + partition_key
+        self[dataset_id].dataset.partitions.append(partition)
 
-    def _register_partition_table(self, buf, tableinfo, parition_key):
+    def _register_partition_table(self, buf, tableinfo, dataset_id, partition_key):
         '''
         dataset uuid
         partition key
         job key
         file uuid
         '''
-        pass
+        self.__logger.info("Registering table Dataset %s, Partition %s", dataset_id, partition_key)
+        if partition_key not in self[dataset_id].dataset.partitions:
+            self.__logger.error("Partition %s not registered for dataset %s",
+                                dataset_id,
+                                partition_key)
+            raise ValueError
 
-    def _register_partition_file(self, buf, fileinfo, partition_key):
+        key = dataset_id + '.partition.' + partition_key
+        hash_ = self._compute_hash(pa.input_stream(buf))
+        obj = self[dataset_id].info.tables.add()
+        obj.uuid = key + '.' + hash_
+        obj.name = obj.uuid
+        obj.parent_uuid = dataset_id
+        obj.address = self._dstore.url_for(obj.uuid)
+        self.__logger.info("Retrieving url %s", obj.address)
+        obj.table.CopyFrom(tableinfo) 
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+
+
+    def _register_partition_file(self, buf, fileinfo, dataset_id, partition_key):
         '''
         Requires 
         dataset uuid
@@ -221,7 +309,26 @@ class BaseObjectStore(BaseBook):
         job key
         file uuid
         '''
-        pass
+        self.__logger.info("Registering table Dataset %s, Partition %s", dataset_id, partition_key)
+        key = dataset_id + '.partition.' + partition_key
+        if key not in self[dataset_id].dataset.partitions:
+            self.__logger.error("Partition %s not registered for dataset %s",
+                                dataset_id,
+                                partition_key)
+            raise ValueError
+
+        key = dataset_id + '.partition.' + partition_key
+        hash_ = self._compute_hash(pa.input_stream(buf))
+        obj = self[dataset_id].dataset.files.add()
+        obj.uuid = key + '.' + hash_
+        obj.name = obj.uuid
+        obj.parent_uuid = dataset_id
+        obj.address = self._dstore.url_for(obj.uuid)
+        self.__logger.info("Retrieving url %s", obj.address)
+        obj.file.CopyFrom(fileinfo) 
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+        
 
     def _register_log(self, buf, loginfo, dataset_id):
         '''
@@ -259,7 +366,11 @@ class BaseObjectStore(BaseBook):
         extension job.dat
         dataset_id.job_name.job_id.dat
         '''
-        obj = self[dataset_id].info.jobs.add()
+        job_id = uuid.uuid4() 
+        self[dataset_id].dataset.job_ids.append(job_id)
+        return job_id
+    
+    def _build_uuid(self, buf, info):
         pass
     
     def _build_name(self, buf, info):
@@ -285,7 +396,7 @@ class BaseObjectStore(BaseBook):
 
         Optional
         --------
-        dataset uuid : required for logs, files, tables, histst
+        dataset uuid : required for logs, files, tables, hists
         job_name or job_uuid
         partition_key : required for files and tables
         '''

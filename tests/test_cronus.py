@@ -21,7 +21,7 @@ import pyarrow as pa
 from cronus.core.cronus import Cronus
 from cronus.core.cronus import BaseObjectStore
 from cronus.io.protobuf.cronus_pb2 import CronusStore, CronusObjectStore, CronusObject
-from cronus.io.protobuf.cronus_pb2 import DummyMessage, FileObjectInfo
+from cronus.io.protobuf.cronus_pb2 import DummyMessage, FileObjectInfo, MenuObjectInfo, ConfigObjectInfo
 import uuid
 
 logging.getLogger().setLevel(logging.INFO)
@@ -138,7 +138,7 @@ class CronusTestCase(unittest.TestCase):
             reader = store._open_object(id_)
             self.assertEqual(reader.num_record_batches, 10)
     
-    def test_register_file(self):
+    def test_register_object(self):
         data = [
                 pa.array([1, 2, 3, 4]),
                 pa.array(['foo', 'bar', 'baz', None]),
@@ -273,5 +273,76 @@ class CronusTestCase(unittest.TestCase):
                 self.assertEqual(reader.num_record_batches, 10)
         print("Test Done ===========================")
 
+    def test_register_dataset(self):
+        '''
+        Create a fake dataset
+        from a menu_id and menu msg
+        from a config_id and config msg
+        add files
+        add tables
+        '''
+        mymenu = CronusObject()
+        mymenu.name = "menu"
+        menuinfo = MenuObjectInfo()
+        menuinfo.created.GetCurrentTime()
+        bufmenu = pa.py_buffer(mymenu.SerializeToString())
+        
+        myconfig = CronusObject()
+        myconfig.name = "config"
+        configinfo = ConfigObjectInfo()
+        configinfo.created.GetCurrentTime()
+        bufconfig = pa.py_buffer(myconfig.SerializeToString())
+
+        store_id = uuid.uuid4()
+        mystore = CronusObjectStore()
+        mystore.name = 'test'
+        mystore.uuid = str(store_id)
+        mystore.parent_uuid = '' # top level store
+        
+        print("Testing directory globbing")
+        data = [
+                pa.array([1, 2, 3, 4]),
+                pa.array(['foo', 'bar', 'baz', None]),
+                pa.array([True, None, False, True])
+                ]
+        batch = pa.RecordBatch.from_arrays(data, ['f0', 'f1', 'f2'])
+        #schema = batch.schema.to_pybytes()
+        sink = pa.BufferOutputStream()
+        writer = pa.RecordBatchFileWriter(sink, batch.schema)
+
+        for i in range(10):
+            writer.write_batch(batch)
+
+        writer.close()
+        buf = sink.getvalue()
+        fileinfo = FileObjectInfo()
+        fileinfo.type = 5
+        fileinfo.aux.num_columns = 3
+
+        with tempfile.TemporaryDirectory() as dirpath:
+            _path = dirpath+'/test'
+            store = BaseObjectStore(str(_path), 'test')  
+            store_id = store.store_uuid
+            print(store.store_info.created.ToDatetime())
+            
+            menu_uuid = store._register_content_type(bufmenu, menuinfo).uuid
+            config_uuid = store._register_content_type(bufconfig, configinfo).uuid
+            print(menu_uuid)
+            print(config_uuid)
+            dataset = store._register_dataset(menu_uuid, config_uuid)
+            store._register_partition(dataset.uuid, 'key')
+            store._register_content_type(buf, 
+                                    fileinfo, 
+                                    dataset_id=dataset.uuid, 
+                                    partition_key='key')
+            
+            
+
+
+
+
+
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    test = CronusTestCase()
+    test.test_register_dataset()

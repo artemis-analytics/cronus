@@ -167,6 +167,7 @@ message ArtemisArtifact {
 
 message MenuObjectInfo {
   MenuObjectAuxInfo aux = 1;
+  google.protobuf.Timestamp created = 2;
 }
 
 message MenuObjectAuxInfo {
@@ -175,6 +176,7 @@ message MenuObjectAuxInfo {
 
 message ConfigObjectInfo {
   ConfigObjectAuxInfo aux = 1;
+  google.protobuf.Timestamp created = 2;
 }
 
 message ConfigObjectAuxInfo {
@@ -214,7 +216,8 @@ message LogObjectAuxInfo {
 message DatasetObjectInfo {
   DatasetObjectAuxInfo aux = 1;
   Transform transform = 4;
-  repeated CronusObject partitions = 2;
+  repeated string partitions = 2;
+  repeated string job_ids = 13;
   repeated CronusObject jobs = 5;
   repeated CronusObject hists = 6;
   repeated CronusObject logs = 7;
@@ -222,7 +225,10 @@ message DatasetObjectInfo {
 // Provenance
   repeated CronusObject parents = 9; 
   repeated CronusObject children = 10;
+  repeated CronusObject files = 11;
+  repeated CronusObject tables = 12;
 }
+
 // Register the content of a dataset in the object store
 
 message DatasetObjectAuxInfo {
