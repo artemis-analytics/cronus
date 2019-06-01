@@ -18,7 +18,6 @@ import hashlib
 import datetime
 from pathlib import Path
 import pyarrow as pa
-from cronus.core.cronus import Cronus
 from cronus.core.cronus import BaseObjectStore
 from cronus.io.protobuf.cronus_pb2 import CronusStore, CronusObjectStore, CronusObject
 from cronus.io.protobuf.cronus_pb2 import DummyMessage, FileObjectInfo, MenuObjectInfo, ConfigObjectInfo
@@ -36,18 +35,6 @@ class CronusTestCase(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-    def test_store(self):
-        with tempfile.TemporaryDirectory() as dirpath:
-            print(dirpath)
-            store = Cronus('teststore', dirpath)
-            self.assertEqual(store.name, 'teststore')
-            p = Path(dirpath)
-            self.assertEqual(store.path, str(p))
-            store._save_store()
-
-            loaded = Cronus('teststore', dirpath)
-            self.assertEqual(store.store_id, loaded.store_id)
 
     def test_menu(self):
         mymenu = Menu() 
@@ -308,7 +295,7 @@ class CronusTestCase(unittest.TestCase):
         mymsg.name = "dummy"
         mymsg.description = "really dumb"
 
-        store_id = uuid.uuid4()
+        store_id = str(uuid.uuid4())
         mystore = CronusObjectStore()
         mystore.name = 'test'
         mystore.uuid = str(store_id)
@@ -340,6 +327,12 @@ class CronusTestCase(unittest.TestCase):
                 buf = pa.py_buffer(store.get(obj_.uuid))
                 reader = pa.ipc.open_file(buf)
                 self.assertEqual(reader.num_record_batches, 10)
+
+            ds = store.list(suffix='dataset')
+            for d in ds:
+                p = d.uuid + '.part_key'
+                f = store.list(prefix=p, suffix='arrow')
+                print(f)
         print("Test Done ===========================")
 
     def test_register_dataset(self):
@@ -366,7 +359,7 @@ class CronusTestCase(unittest.TestCase):
         configinfo.created.GetCurrentTime()
         bufconfig = pa.py_buffer(myconfig.SerializeToString())
        
-        store_id = uuid.uuid4()
+        store_id = str(uuid.uuid4())
         mystore = CronusObjectStore()
         mystore.name = 'test'
         mystore.uuid = str(store_id)
@@ -410,18 +403,89 @@ class CronusTestCase(unittest.TestCase):
                                     dataset_id=dataset.uuid, 
                                     partition_key='key',
                                     job_id=job_id)
+
+            ds = store.list(suffix='dataset')
+            print(ds)
             
+    def test_validation(self):
+        print("Simulate production")
+        data = [
+                pa.array([1, 2, 3, 4]),
+                pa.array(['foo', 'bar', 'baz', None]),
+                pa.array([True, None, False, True])
+                ]
+        batch = pa.RecordBatch.from_arrays(data, ['f0', 'f1', 'f2'])
+        sink = pa.BufferOutputStream()
+        writer = pa.RecordBatchFileWriter(sink, batch.schema)
+
+        for i in range(10):
+            writer.write_batch(batch)
+
+        writer.close()
+        buf = sink.getvalue()
+        
+        mymenu = Menu() 
+        mymenu.uuid = str(uuid.uuid4())
+        mymenu.name = f"{mymenu.uuid}.menu.dat"
+
+        menuinfo = MenuObjectInfo()
+        menuinfo.created.GetCurrentTime()
+        bufmenu = pa.py_buffer(mymenu.SerializeToString())
+        
+        myconfig = Configuration() 
+        myconfig.uuid = str(uuid.uuid4())
+        myconfig.name = f"{myconfig.uuid}.config.dat"
+
+        configinfo = ConfigObjectInfo()
+        configinfo.created.GetCurrentTime()
+        bufconfig = pa.py_buffer(myconfig.SerializeToString())
+
+        with tempfile.TemporaryDirectory() as dirpath:
+            _path = dirpath+'/test'
+            store = BaseObjectStore(str(_path), 'test') # wrapper to the CronusStore message
+            menu_uuid = store.register_content(mymenu, menuinfo).uuid
+            config_uuid = store.register_content(myconfig, configinfo).uuid
+            dataset = store.register_dataset(menu_uuid, config_uuid)
             
-
-
-
-
+            # Multiple streams
+            store.new_partition(dataset.uuid, 'key1')
+            store.new_partition(dataset.uuid, 'key2')
+            store.new_partition(dataset.uuid, 'key3')
+            
+            fileinfo = FileObjectInfo()
+            fileinfo.type = 5
+            fileinfo.aux.description = 'Some dummy data'
+            
+            ids_ = []
+            parts = store.list_partitions(dataset.uuid)
+            print(parts)
+            for _ in range(10):
+                job_id = store.new_job(dataset.uuid)
+                
+                for key in parts:
+                    ids_.append(store.register_content(buf, 
+                                                 fileinfo, 
+                                                 dataset_id=dataset.uuid, 
+                                                 job_id=job_id, 
+                                                 partition_key=key ).uuid)
+                    store.put(ids_[-1], buf)
+            
+            for id_ in ids_:
+                buf = pa.py_buffer(store.get(id_))
+                reader = pa.ipc.open_file(buf)
+                self.assertEqual(reader.num_record_batches, 10)
+            
+            # Save the store, reload
+            store.save_store()
+            newstore = BaseObjectStore(str(_path), 'test', store_uuid=store.store_uuid) 
+            for id_ in ids_:
+                print("Get object %s", id_)
+                print(type(id_))
+                buf = pa.py_buffer(newstore.get(id_))
+                reader = pa.ipc.open_file(buf)
+                self.assertEqual(reader.num_record_batches, 10)
+            print("Simulation Test Done ===========================")
+            
 
 if __name__ == '__main__':
     unittest.main()
-    #test = CronusTestCase()
-    #test.test_arrow()
-    #test.test_menu()
-    #test.test_config()
-    #test.test_identical_files()
-    #test.test_dir_glob()
