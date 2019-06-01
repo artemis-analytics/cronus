@@ -114,7 +114,6 @@ message CronusObject {
     HistsObjectInfo hists = 7; // Artemis HistCollection Output Proto (Protobuf)
     JobObjectInfo job = 8; // Artemis Output Process Metadata Proto (Protobuf)
     LogObjectInfo log = 9; // Artemis Log File output (Text File)
-    PartitionObjectInfo partition = 10; // Consistent collection of output with common schema
     FileObjectInfo file = 11; // Artemis Arrow RecordBatchFile (Arrow)
     TableObjectInfo table = 12; // Artemis Table (Protobuf -- bulk of the metadata relating to a partition)
   }
@@ -217,7 +216,7 @@ message DatasetObjectInfo {
   DatasetObjectAuxInfo aux = 1;
   Transform transform = 4;
   repeated string partitions = 2;
-  repeated string job_ids = 13;
+  int32 job_idx = 13;
   repeated CronusObject jobs = 5;
   repeated CronusObject hists = 6;
   repeated CronusObject logs = 7;
@@ -235,22 +234,13 @@ message DatasetObjectAuxInfo {
   string description = 1;
 }
 
+message TableObjectInfo {
+  repeated string fields = 1;
+}
+
 message Transform {
   CronusObject menu = 1;
   CronusObject config = 2;
-}
-
-message PartitionObjectInfo {
-  PartitionObjectAuxInfo aux = 1;
-  repeated CronusObject files = 2;
-  repeated CronusObject tables = 4;
-  // Merged Table representing common Schema for all files in partition
-  CronusObject table = 8;
-  string filestorepath = 9;
-}
-
-message PartitionObjectAuxInfo {
-  string description = 1;
 }
 
 enum FileType {
@@ -287,50 +277,6 @@ message BlockInfo {
   int64 size_bytes = 1;
   int64 offset = 2;
   int64 length = 3;
-}
-
-message TableObjectInfo {
-  TableObjectAuxInfo aux = 1;
-  Schema schema = 2;
-}
-
-message TableObjectAuxInfo {
-  string description = 1;
-}
-
-message Schema {
-  string name = 1;
-  string uuid = 2;
-  SchemaInfo info = 3;
-}
-
-message SchemaInfo {
-  SchemaAuxInfo aux = 1;
-  repeated Field fields = 2;
-}
-
-message SchemaAuxInfo {
-  string description = 1;
-  bytes raw_header = 2;
-  bytes raw_footer = 3;
-}
-
-message Field {
-  string name = 1;
-  string uuid = 2;
-  FieldInfo info = 3;
-}
-
-message FieldInfo {
-  FieldAuxInfo aux = 1;
-  string type = 2;
-  bool nullable = 3;
-  repeated Field children = 4;
-}
-
-message FieldAuxInfo {
-  string description = 1;
-  map<string, string> meta = 2; 
 }
 
 message DummyMessage {

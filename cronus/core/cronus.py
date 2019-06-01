@@ -19,7 +19,7 @@ import pyarrow as pa
 from storefact import get_store_from_url
 # from simplekv.fs import FilesystemStore
 
-from cronus.io.protobuf.cronus_pb2 import CronusObjectStore, CronusObject
+from cronus.io.protobuf.cronus_pb2 import CronusObjectStore, CronusObject, FileType
 from cronus.logger import Logger
 from cronus.core.book import BaseBook
 
@@ -31,7 +31,6 @@ from cronus.io.protobuf.cronus_pb2 import MenuObjectInfo, \
         HistsObjectInfo, \
         JobObjectInfo, \
         LogObjectInfo, \
-        PartitionObjectInfo, \
         FileObjectInfo, \
         TableObjectInfo
 
@@ -140,246 +139,15 @@ class BaseObjectStore(BaseBook):
             self.__logger.error("Name of store does not equal persisted store")
             raise ValueError
 
-
     def save_store(self):
         buf = self._mstore.SerializeToString()
         self._dstore.put(self._uuid, buf)
-
-    def _set_object_info(self, obj, info):
-        '''
-        '''
-        if isinstance(info, FileObjectInfo):
-            obj.file.CopyFrom(info)
-        elif isinstance(info, MenuObjectInfo):
-            obj.menu.CopyFrom(info)
-        elif isinstance(info, ConfigObjectInfo):
-            obj.config.CopyFrom(info)
-        elif isinstance(info, DatasetObjectInfo):
-            obj.dataset.CopyFrom(info)
-        elif isinstance(info, HistsObjectInfo):
-            obj.hists.CopyFrom(info)
-        elif isinstance(info, JobObjectInfo):
-            obj.job.CopyFrom(info)
-        elif isinstance(info, LogObjectInfo):
-            obj.log.CopyFrom(info)
-        elif isinstance(info, TableObjectInfo):
-            obj.table.CopyFrom(info)
-        elif isinstance(info, PartitionObjectInfo):
-            obj.partition.CopyFrom(info)
-        else:
-            self.__logger.error("Unknown info object")
-            raise ValueError
     
-    def _register_content_type(self, buf, info, **kwargs):
-        '''
-        Menu metadata
-            Menu protobug
-        Configuration metadata
-            config protobuf
-        Dataset metadata
-            Dataset protobuf
-            Log file
-            Hists protobuf
-            Job protobuf
-            Partition
-                Data file
-                Table (Schema) protobuf
-        '''
-        metaobj = None
-        if isinstance(info, FileObjectInfo):
-            dataset_id = kwargs['dataset_id']
-            partition_key = kwargs['partition_key']
-            metaobj = self._register_partition_file(buf, info, dataset_id, partition_key) 
-        elif isinstance(info, MenuObjectInfo):
-            metaobj = self._register_menu(buf, info)
-        elif isinstance(info, ConfigObjectInfo):
-            metaobj = self._register_config(buf, info)
-        elif isinstance(info, DatasetObjectInfo):
-            metaobj = self._register_dataset(**kwargs) 
-        elif isinstance(info, HistsObjectInfo):
-            obj.hists.CopyFrom(info)
-        elif isinstance(info, JobObjectInfo):
-            obj.job.CopyFrom(info)
-        elif isinstance(info, LogObjectInfo):
-            obj.log.CopyFrom(info)
-        elif isinstance(info, TableObjectInfo):
-            metaobj = self._register_partition_table(buf, info, **kwargs) 
-        else:
-            self.__logger.error("Unknown info object")
-            raise ValueError
-        return metaobj
-
-    def _register_menu(self, buf, menuinfo):
-        self.__logger.info("Registering menu object")
+    def register_content(self, 
+                         content, 
+                         info, 
+                         **kwargs):
         
-        obj = self._mstore.info.objects.add()
-         
-        obj.uuid = self._compute_hash(pa.input_stream(buf))
-        obj.parent_uuid = self._uuid
-        obj.name = obj.uuid + '.menu.dat'
-        # New data, get a url from the datastore
-        obj.address = self._dstore.url_for(obj.name)
-        self.__logger.info("Retrieving url %s", obj.address)
-        
-        # Copy the info object
-        obj.menu.CopyFrom(menuinfo)
-        self[obj.uuid] = obj
-        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-        
-
-    def _register_config(self, buf, configinfo):
-        '''
-        Takes a config protbuf bytestream
-        '''
-        self.__logger.info("Registering config object")
-        
-        obj = self._mstore.info.objects.add()
-        
-        obj.uuid = self._compute_hash(pa.input_stream(buf))
-        obj.parent_uuid = self._uuid
-        obj.name = obj.uuid + '.config.dat' 
-        # New data, get a url from the datastore
-        obj.address = self._dstore.url_for(obj.name)
-        self.__logger.info("Retrieving url %s", obj.address)
-        
-        # Copy the info object
-        obj.config.CopyFrom(configinfo)
-        self[obj.uuid] = obj
-        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-
-    def _register_dataset(self, menu_id, config_id):
-        '''
-        dataset creation
-        occurs before persisting storing information
-        works as a datasink 
-        Datasets are not a persisted object in the datastore
-        '''
-        obj = self._mstore.info.objects.add()
-        obj.uuid = str(uuid.uuid4())  # Register new datsets with UUID4
-        obj.parent_uuid = self._uuid
-        obj.name = obj.uuid + '.dataset'
-
-        # Set the transform objects, assumes menu, config and datasets
-        # all reside in one store
-        obj.dataset.transform.menu.CopyFrom(self[menu_id])
-        obj.dataset.transform.config.CopyFrom(self[config_id])
-        self[obj.uuid] = obj
-        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-
-    def _register_partition(self, dataset_id, partition_key):
-        '''
-        dataset id
-        partition key from menu -- corresponds to leaf name
-        '''
-        partition = dataset_id + '.partition.' + partition_key
-        self[dataset_id].dataset.partitions.append(partition)
-
-    def _register_partition_table(self, buf, tableinfo, dataset_id, partition_key):
-        '''
-        dataset uuid
-        partition key
-        job key
-        file uuid
-        '''
-        self.__logger.info("Registering table Dataset %s, Partition %s", dataset_id, partition_key)
-        if partition_key not in self[dataset_id].dataset.partitions:
-            self.__logger.error("Partition %s not registered for dataset %s",
-                                dataset_id,
-                                partition_key)
-            raise ValueError
-
-        key = dataset_id + '.partition.' + partition_key
-        hash_ = self._compute_hash(pa.input_stream(buf))
-        obj = self[dataset_id].info.tables.add()
-        obj.uuid = key + '.' + hash_
-        obj.name = obj.uuid
-        obj.parent_uuid = dataset_id
-        obj.address = self._dstore.url_for(obj.uuid)
-        self.__logger.info("Retrieving url %s", obj.address)
-        obj.table.CopyFrom(tableinfo) 
-        self[obj.uuid] = obj
-        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-
-
-    def _register_partition_file(self, buf, fileinfo, dataset_id, partition_key):
-        '''
-        Requires 
-        dataset uuid
-        partition key
-        job key
-        file uuid
-        '''
-        self.__logger.info("Registering table Dataset %s, Partition %s", dataset_id, partition_key)
-        key = dataset_id + '.partition.' + partition_key
-        if key not in self[dataset_id].dataset.partitions:
-            self.__logger.error("Partition %s not registered for dataset %s",
-                                dataset_id,
-                                partition_key)
-            raise ValueError
-
-        key = dataset_id + '.partition.' + partition_key
-        hash_ = self._compute_hash(pa.input_stream(buf))
-        obj = self[dataset_id].dataset.files.add()
-        obj.uuid = key + '.' + hash_
-        obj.name = obj.uuid
-        obj.parent_uuid = dataset_id
-        obj.address = self._dstore.url_for(obj.uuid)
-        self.__logger.info("Retrieving url %s", obj.address)
-        obj.file.CopyFrom(fileinfo) 
-        self[obj.uuid] = obj
-        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-        
-
-    def _register_log(self, buf, loginfo, dataset_id):
-        '''
-        Requires 
-        uuid of dataset
-        generate a hists uuid from buffer
-        job key common to all jobs in a dataset
-        keep an running index of hists?
-        extension hists.data
-        dataset_id.job_name.log_id.dat
-        '''
-        obj = self[dataset_id].info.logs.add()
-        pass
-
-    def _register_hists(self, buf, histsinfo, dataset_id):
-        '''
-        Requires 
-        uuid of dataset
-        generate a hists uuid from buffer
-        job key common to all jobs in a dataset
-        keep an running index of hists?
-        extension hists.data
-        dataset_id.job_name.hists_id.dat
-        '''
-        obj = self[dataset_id].info.hists.add()
-        pass
-
-    def _register_job(self, buf, jobinfo, dataset_id):
-        '''
-        Requires 
-        uuid of dataset
-        generate a job uuid from buffer
-        job_name key common to all jobs in a dataset
-        keep an running index of jobs?
-        extension job.dat
-        dataset_id.job_name.job_id.dat
-        '''
-        job_id = uuid.uuid4() 
-        self[dataset_id].dataset.job_ids.append(job_id)
-        return job_id
-    
-    def _build_uuid(self, buf, info):
-        pass
-    
-    def _build_name(self, buf, info):
-        return ''
-    
-    def register_content(self, buf, info, 
-                         dataset_uuid=None, 
-                         job_id=None, 
-                         partition_key=None):
         '''
         Returns the content identifier
         content is the raw data, e.g. serialized bytestream to be persisted
@@ -399,64 +167,380 @@ class BaseObjectStore(BaseBook):
         dataset uuid : required for logs, files, tables, hists
         job_name or job_uuid
         partition_key : required for files and tables
+        
+        Menu metadata
+            Menu protobug
+        Configuration metadata
+            config protobuf
+        Dataset metadata
+            Dataset protobuf
+            Log file
+            Hists protobuf
+            Job protobuf
+            Partition
+                Data file
+                Table (Schema) protobuf
         '''
-        self.__logger.info("register")
+        metaobj = None
+        dataset_id = kwargs.get('dataset_id', None)
+        partition_key = kwargs.get('partition_key', None)
+        job_id = kwargs.get('job_id', None)
+        menu_id = kwargs.get('menu_id', None)
+        config_id = kwargs.get('config_id', None)
+        glob = kwargs.get('glob', None)
+
+        content_type = type(content)
+
+
+        if isinstance(info, FileObjectInfo):
+            if dataset_id is None:
+                self.__logger.error("Registering file requires dataset id")
+                raise ValueError
+            if partition_key is None:
+                self.__logger.error("Registering file requires partition key")
+                raise ValueError
+            
+            if content_type is str:
+                if glob is None:
+                    try:
+                        metaobj = self._register_file(content, 
+                                                     info, 
+                                                     dataset_id, 
+                                                     partition_key)
+                    except Exception:
+                        self.__logger.error("Cannot register on-disk file")
+                        raise
+                else:
+                    try:
+                        metaobj = self._register_dir(content, 
+                                                     glob,   
+                                                     info, 
+                                                     dataset_id, 
+                                                     partition_key)
+                    except Exception:
+                        self.__logger.error("Cannot register files")
+                        raise
+
+            else:
+                if job_id is None:
+                    self.__logger.error("Registering partition file requires job id")
+                    raise ValueError
+                try:
+                    metaobj = self._register_partition_file(content, 
+                                                            info, 
+                                                            dataset_id, 
+                                                            job_id, 
+                                                            partition_key)
+                except Exception:
+                    self.__logger.error("Cannot register partiion file")
+                    raise
+        
+        elif isinstance(info, MenuObjectInfo):
+            metaobj = self._register_menu(content, info)
+        
+        elif isinstance(info, ConfigObjectInfo):
+            metaobj = self._register_config(content, info)
+        
+        elif isinstance(info, DatasetObjectInfo):
+            self.__logger.error("To register a new dataset, use register_dataset")
+            raise TypeError
+        
+        elif isinstance(info, HistsObjectInfo):
+            if dataset_id is None:
+                self.__logger.error("Registering hists requires dataset id")
+                raise ValueError
+            if job_id is None:
+                self.__logger.error("Registering hists requires job id")
+                raise ValueError
+            metaobj =  self._register_hists(content, info, dataset_id, job_id) 
+        
+        elif isinstance(info, JobObjectInfo):
+            metaobj =  self._register_hists(content, info, dataset_id, job_id) 
+       
+
+        # TODO Log file storage according to job_id
+        # Logs -- how to register a log file correctly with output path?
+        # elif isinstance(info, LogObjectInfo):
+        #     obj.log.CopyFrom(info)
+        elif isinstance(info, TableObjectInfo):
+            if dataset_id is None:
+                self.__logger.error("Registering file requires dataset id")
+                raise ValueError
+            if job_id is None:
+                self.__logger.error("Registering file requires job id")
+                raise ValueError
+            if partition_key is None:
+                self.__logger.error("Registering file requires partition key")
+                raise ValueError
+            metaobj = self._register_partition_table(content, 
+                                                     info, 
+                                                     dataset_id, 
+                                                     job_id, 
+                                                     partition_key) 
+        else:
+            self.__logger.error("Unknown info object")
+            raise ValueError
+        return metaobj
+    
+    def register_dataset(self, menu_id, config_id):
+        '''
+        dataset creation
+        occurs before persisting storing information
+        works as a datasink 
+        Datasets are not a persisted object in the datastore
+        '''
         obj = self._mstore.info.objects.add()
-        obj.name = self._build_name(buf, info)
-        obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.uuid = str(uuid.uuid4())  # Register new datsets with UUID4
         obj.parent_uuid = self._uuid
-        # New data, get a url from the datastore
-        obj.address = self._dstore.url_for(obj.uuid)
-        self.__logger.info("Retrieving url %s", obj.address)
-        self._set_object_info(obj, info)
-        # self._register_object(uuid,obj)
+        obj.name = obj.uuid + '.dataset'
+
+        # Set the transform objects, assumes menu, config and datasets
+        # all reside in one store
+        obj.dataset.transform.menu.CopyFrom(self[menu_id])
+        obj.dataset.transform.config.CopyFrom(self[config_id])
+        obj.address = self._dstore.url_for(obj.name)
         self[obj.uuid] = obj
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+    
+    def new_job(self, dataset_id): 
+        '''
+        Requires 
+        uuid of dataset
+        generate a job uuid from buffer
+        job_name key common to all jobs in a dataset
+        keep an running index of jobs?
+        extension job.dat
+        dataset_id.job_name.job_id.dat
+        '''
+        job_idx = self[dataset_id].dataset.job_idx
+        self[dataset_id].dataset.job_idx += 1
+        return job_idx
+    
+    def new_partition(self, dataset_id, partition_key):
+        '''
+        dataset id
+        partition key from menu -- corresponds to leaf name
+        '''
+        self[dataset_id].dataset.partitions.append(partition_key)
+    
+    def put(self, id_, content):
+        '''
+        id_ : uuid of object
+        content : pyarrow Buffer or protobuf msg
+        '''
+        if type(content) is pa.lib.Buffer:
+            try:
+                self._put_object(id_, content)
+            except Exception:
+                raise
+        else:
+            try:
+                self._put_message(id_, content)
+            except Exception:
+                raise
+
+
+    def get(self, id_, msg=None):
+        '''
+        id_ : uuid of content
+        msg = protobuf message to be parsed into
+        '''
+
+        if msg is None:
+            return self._get_object(id_)
+        else:
+            self._get_message(id_, msg)
+
+    def open(self, id_):
+        # Returns pyarrow io handle
+        if self[id_].WhichOneof('info') == 'file':
+            # Arrow RecordBatchFile
+            if self[id_].file.type == 5:
+                # Convert the url to path
+                return self._open_ipc_file(id_) 
+            # Arrow RecordBatchStream
+            elif self[id_].file.type == 6:
+                return self._open_ipc_stream(id_) 
+            else:
+                return self._open_stream(id_)
+        else:
+            # Anything else in the store is either a protobuf bytestream
+            # or just text, e.g. a log file
+            # Need to handle compressed files
+            return self._open_stream(id_) 
 
     def _compute_hash(self, stream):
         hashobj = hashlib.new(self._algorithm)
         hashobj.update(stream.read())
         return hashobj.hexdigest()
-
-    def _register_object(self, obj):
-        '''
-        Identical files will generate same as
-        while we should not support duplicate data
-        could there be a reason?
-
-        check that uuid is not in the store
-        if so, create a counter extension to the uuid
-        
-        compute object hash
-        check for duplicates and increment count
-            duplicates not expected for artemis outputs
-        check info object type
-        validate kwargs
-        set any metadata from info or kwargs -- use info objects to contain
-            correct data to build the file name?
-
-        '''
-        pass
-        
     
-    def register_file(self, location, info, extension=''):
+    def _register_menu(self, menu, menuinfo):
+        self.__logger.info("Registering menu object")
+        
+        obj = self._mstore.info.objects.add()
+         
+        # obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.uuid = menu.uuid
+        obj.parent_uuid = self._uuid
+        obj.name = menu.name 
+        # New data, get a url from the datastore
+        obj.address = self._dstore.url_for(obj.name)
+        self.__logger.info("Retrieving url %s", obj.address)
+        
+        # Copy the info object
+        obj.menu.CopyFrom(menuinfo)
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+
+    def _register_config(self, config, configinfo):
+        '''
+        Takes a config protbuf bytestream
+        '''
+        self.__logger.info("Registering config object")
+        
+        obj = self._mstore.info.objects.add()
+        
+        obj.uuid = config.uuid 
+        obj.parent_uuid = self._uuid
+        obj.name = config.name 
+        # New data, get a url from the datastore
+        obj.address = self._dstore.url_for(obj.name)
+        self.__logger.info("Retrieving url %s", obj.address)
+        
+        # Copy the info object
+        obj.config.CopyFrom(configinfo)
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+
+    def _register_partition_table(self, 
+                                  buf, 
+                                  tableinfo, 
+                                  dataset_id, 
+                                  job_id,
+                                  partition_key):
+        '''
+        dataset uuid
+        partition key
+        job key
+        file uuid
+        '''
+        self.__logger.info("Registering table Dataset %s, Partition %s", dataset_id, partition_key)
+        if partition_key not in self[dataset_id].dataset.partitions:
+            self.__logger.error("Partition %s not registered for dataset %s",
+                                dataset_id,
+                                partition_key)
+            raise ValueError
+        
+        hash_ = self._compute_hash(pa.input_stream(buf))
+        obj = self[dataset_id].info.tables.add()
+        obj.uuid = hash_
+        obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{hash_}.table"
+        obj.parent_uuid = dataset_id
+        obj.address = self._dstore.url_for(obj.name)
+        self.__logger.info("Retrieving url %s", obj.address)
+        obj.table.CopyFrom(tableinfo) 
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+
+
+    def _register_partition_file(self, 
+                                 buf, 
+                                 fileinfo, 
+                                 dataset_id, 
+                                 job_id,
+                                 partition_key):
+        '''
+        Requires 
+        dataset uuid
+        partition key
+        job key
+        file uuid
+        '''
+        self.__logger.info("Registering file") 
+        self.__logger.info("Dataset: %s, Partition: %s", dataset_id, partition_key)
+        if partition_key not in self[dataset_id].dataset.partitions:
+            self.__logger.error("Partition %s not registered for dataset %s",
+                                dataset_id,
+                                partition_key)
+            raise ValueError
+
+        key = str(FileType.Name(fileinfo.type)).lower()
+        hash_ = self._compute_hash(pa.input_stream(buf))
+        obj = self[dataset_id].dataset.files.add()
+        obj.uuid = hash_ 
+        obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{hash_}.{key}"
+        obj.parent_uuid = dataset_id
+        obj.address = self._dstore.url_for(obj.name)
+        self.__logger.info("Retrieving url %s", obj.address)
+        obj.file.CopyFrom(fileinfo) 
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+        
+
+    def _register_log(self,     
+                      buf, 
+                      loginfo, 
+                      dataset_id,
+                      job_id):
+        '''
+        Requires 
+        uuid of dataset
+        generate a hists uuid from buffer
+        job key common to all jobs in a dataset
+        keep an running index of hists?
+        extension hists.data
+        dataset_id.job_name.log_id.dat
+        '''
+        obj = self[dataset_id].dataset.logs.add()
+        pass
+
+    def _register_hists(self, 
+                        buf, 
+                        histsinfo, 
+                        dataset_id,
+                        job_id):
+        '''
+        Requires 
+        uuid of dataset
+        generate a hists uuid from buffer
+        job key common to all jobs in a dataset
+        keep an running index of hists?
+        extension hists.data
+        dataset_id.job_name.hists_id.dat
+        '''
+        obj = self[dataset_id].dataset.hists.add()
+        job_id = self[dataset_id].dataset.job_id
+        obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.parent_uuid = dataset_id 
+        obj.name = f"{dataset_id}.job_{job_id}.{hash_}.hist"
+        obj.address = self._dstore.url_for(obj.name)
+        obj.hists.CopyFrom(histinfo)
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+    
+    def _register_file(self, 
+                      location, 
+                      fileinfo, 
+                      dataset_id, 
+                      partition_key):
         '''
         Returns the content identifier
         for a file that is already in a store
         Requires a stream as bytes
         '''
+        self.__logger.info("Registering on disk file %s", location)
         path = Path(location)
         if path.is_absolute() is False:
             path = path.resolve()
-        obj = self._mstore.info.objects.add()
-        obj.name = extension
+        obj = self[dataset_id].dataset.files.add()
         obj.uuid = self._compute_hash(pa.input_stream(str(path)))
-        obj.parent_uuid = self._uuid
+        obj.name = f"{dataset_id}.part_{partition_key}.{obj.uuid}.{path.name}"
+        obj.parent_uuid = dataset_id
         # Create a Path object, ensure that location points to a file
         # Since we are using simplekv, new objects always registers as url
         # So make a file path as url
         obj.address = path.as_uri()
-        self._set_object_info(obj, info)
+        obj.file.CopyFrom(fileinfo)
 
         if obj.uuid in self:
             if obj.uuid in self._dups:
@@ -468,13 +552,18 @@ class BaseObjectStore(BaseBook):
         self[obj.uuid] = obj
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def register_dir(self, location, glob, info):
+    def _register_dir(self, 
+                     location, 
+                     glob, 
+                     fileinfo,
+                     dataset_id,
+                     partition_key):
         '''
         Registers a directory of files in a store
         '''
         objs = []
         for file_ in Path(location).glob(glob):
-            objs.append(self.register_file(file_, info))
+            objs.append(self._register_file(file_, fileinfo, dataset_id, partition_key))
         return objs
 
     def __setitem__(self, id_, msg):
@@ -492,10 +581,32 @@ class BaseObjectStore(BaseBook):
 
         self._set(id_, msg)
 
+    def _put_message(self, id_, msg):
+        # proto message to persist
+        self.__logger.info("Putting message to datastore %s", self[id_].address)
+        try:
+            self._dstore.put(self[id_].name, msg.SerializeToString())
+        except IOError:
+            self.__logger.error("IO error %s", self[id_].address)
+            raise
+        except Exception:
+            self.__logger.error("Unknown error put %s", self[id_].address)
+            raise
+
+    def _get_message(self, id_, msg):
+        # get object will read object into memory buffer
+        try:
+            buf = self._dstore.get(self[id_].name)
+            msg.ParseFromString(buf)
+        except KeyError:
+            self.__logger.error("Message not found in store %s", self[id_].address)
+            raise
+    
     def _put_object(self, id_, buf):
         # bytestream to persist
+        self.__logger.info("Putting buf to datastore %s", self[id_].address)
         try:
-            self._dstore.put(id_, buf.to_pybytes())
+            self._dstore.put(self[id_].name, buf.to_pybytes())
         except IOError:
             self.__logger.error("IO error %s", self[id_].address)
             raise
@@ -506,7 +617,7 @@ class BaseObjectStore(BaseBook):
     def _get_object(self, id_):
         # get object will read object into memory buffer
         try:
-            return self._dstore.get(id_)
+            return self._dstore.get(self[id_].name)
         except KeyError:
             # File resides outside of kv store
             # Used for registering files already existing in persistent storage
@@ -515,26 +626,42 @@ class BaseObjectStore(BaseBook):
     def _parse_url(self, id_):
         url_data = urllib.parse.urlparse(self[id_].address)
         return urllib.parse.unquote(url_data.path)
+    
+    def _open_ipc_file(self, id_):
+        path = self._parse_url(id_)
+        try:
+            stream = pa.ipc.open_file(path)
+        except IOError:
+            self.__logger.error("Unable to open ipc message %s", path)
+            raise
+        except Exception:
+            self.__logger.error("Unknown error opening ipc message %s", path)
+            raise
+        return stream
 
-    def _open_object(self, id_):
-        # Returns pyarrow io handle
-        if self[id_].WhichOneof('info') == 'file':
-            # Arrow RecordBatchFile
-            if self[id_].file.type == 5:
-                # Convert the url to path
-                return pa.ipc.open_file(self._parse_url(id_))
-            # Arrow RecordBatchStream
-            elif self[id_].file.type == 6:
-                pa.ipc.open_stream(self[id_].address)
-            else:
-                return pa.input_stream(self[id_].address)
-        else:
-            # Anything else in the store is either a protobuf bytestream
-            # or just text, e.g. a log file
-            # Need to handle compressed files
-            return pa.input_stream(self[id_].address)
-
-
+    def _open_ipc_stream(self, id_):
+        path = self._parse_url(id_)
+        try:
+            stream = pa.ipc.open_stream(path)
+        except IOError:
+            self.__logger.error("Unable to open ipc message %s", path)
+            raise
+        except Exception:
+            self.__logger.error("Unknown error opening ipc message %s", path)
+            raise
+        return stream
+    
+    def _open_stream(self, id_):
+        path = self._parse_url(id_)
+        try:
+            stream = pa.input_stream(path)
+        except IOError:
+            self.__logger.error("Unable to open stream %s", path)
+            raise
+        except Exception:
+            self.__logger.error("Unknown error opening stream %s", path)
+            raise
+        return stream
 
 
 
