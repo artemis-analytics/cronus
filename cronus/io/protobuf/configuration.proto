@@ -1,0 +1,23 @@
+syntax = "proto3";
+package cronus;
+
+message Property {
+  string name = 1;
+  string type = 2;
+  string value = 3;
+}
+
+message Module {
+  string name = 1;
+  string module = 2;
+  string klass = 3;
+  repeated Property properties = 4;
+}
+
+message Configuration {
+  string name = 1;
+  string uuid = 2;
+  repeated Module tools = 3;
+  repeated Module algos = 4;
+}
+

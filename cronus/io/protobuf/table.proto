@@ -1,0 +1,48 @@
+syntax = "proto3";
+package cronus;
+
+
+message Table {
+  string name = 1;
+  string uuid = 2;
+  TableInfo info = 3;
+}
+
+message TableInfo {
+  Schema schema = 1;
+}
+
+message Schema {
+  string name = 1;
+  string uuid = 2;
+  SchemaInfo info = 3;
+}
+
+message SchemaInfo {
+  SchemaAuxInfo aux = 1;
+  repeated Field fields = 2;
+}
+
+message SchemaAuxInfo {
+  string description = 1;
+  bytes raw_header = 2;
+  bytes raw_footer = 3;
+}
+
+message Field {
+  string name = 1;
+  string uuid = 2;
+  FieldInfo info = 3;
+}
+
+message FieldInfo {
+  FieldAuxInfo aux = 1;
+  string type = 2;
+  bool nullable = 3;
+  repeated Field children = 4;
+}
+
+message FieldAuxInfo {
+  string description = 1;
+  map<string, string> meta = 2; 
+}
