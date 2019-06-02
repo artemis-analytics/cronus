@@ -13,19 +13,23 @@ Test Class for Artemis MetaStore
 import unittest
 import logging
 import tempfile
-import os
+import os, shutil
 import hashlib
 import datetime
+import dask.delayed
 from pathlib import Path
 import pyarrow as pa
-from cronus.core.cronus import BaseObjectStore
+import numpy as np
+
+from cronus.core.cronus import BaseObjectStore, JobBuilder
 from cronus.io.protobuf.cronus_pb2 import CronusStore, CronusObjectStore, CronusObject
-from cronus.io.protobuf.cronus_pb2 import DummyMessage, FileObjectInfo, MenuObjectInfo, ConfigObjectInfo
+from cronus.io.protobuf.cronus_pb2 import DummyMessage, FileObjectInfo, MenuObjectInfo, ConfigObjectInfo, DatasetObjectInfo
 from cronus.io.protobuf.menu_pb2 import Menu
 from cronus.io.protobuf.configuration_pb2 import Configuration
 import uuid
 
 logging.getLogger().setLevel(logging.INFO)
+
 
 
 class CronusTestCase(unittest.TestCase):
@@ -458,6 +462,11 @@ class CronusTestCase(unittest.TestCase):
             
             ids_ = []
             parts = store.list_partitions(dataset.uuid)
+            # reload menu and config
+            newmenu = Menu()
+            store.get(menu_uuid, newmenu)
+            newconfig = Configuration()
+            store.get(config_uuid, newconfig)
             print(parts)
             for _ in range(10):
                 job_id = store.new_job(dataset.uuid)
@@ -484,8 +493,190 @@ class CronusTestCase(unittest.TestCase):
                 buf = pa.py_buffer(newstore.get(id_))
                 reader = pa.ipc.open_file(buf)
                 self.assertEqual(reader.num_record_batches, 10)
+            print(newmenu)
+            print(newconfig)
             print("Simulation Test Done ===========================")
             
+    def test_validation(self):
+        print("Simulate production")
+        data = [
+                pa.array([1, 2, 3, 4]),
+                pa.array(['foo', 'bar', 'baz', None]),
+                pa.array([True, None, False, True])
+                ]
+        batch = pa.RecordBatch.from_arrays(data, ['f0', 'f1', 'f2'])
+        sink = pa.BufferOutputStream()
+        writer = pa.RecordBatchFileWriter(sink, batch.schema)
 
+        for i in range(10):
+            writer.write_batch(batch)
+
+        writer.close()
+        buf = sink.getvalue()
+        
+        mymenu = Menu() 
+        mymenu.uuid = str(uuid.uuid4())
+        mymenu.name = f"{mymenu.uuid}.menu.dat"
+
+        menuinfo = MenuObjectInfo()
+        menuinfo.created.GetCurrentTime()
+        bufmenu = pa.py_buffer(mymenu.SerializeToString())
+        
+        myconfig = Configuration() 
+        myconfig.uuid = str(uuid.uuid4())
+        myconfig.name = f"{myconfig.uuid}.config.dat"
+
+        configinfo = ConfigObjectInfo()
+        configinfo.created.GetCurrentTime()
+        bufconfig = pa.py_buffer(myconfig.SerializeToString())
+
+        with tempfile.TemporaryDirectory() as dirpath:
+            _path = dirpath+'/test'
+            store = BaseObjectStore(str(_path), 'test') # wrapper to the CronusStore message
+            # Following puts the menu and config to the datastore
+            menu_uuid = store.register_content(mymenu, menuinfo).uuid
+            config_uuid = store.register_content(myconfig, configinfo).uuid
+            dataset = store.register_dataset(menu_uuid, config_uuid)
+            
+            # Multiple streams
+            store.new_partition(dataset.uuid, 'key1')
+            store.new_partition(dataset.uuid, 'key2')
+            store.new_partition(dataset.uuid, 'key3')
+            
+            fileinfo = FileObjectInfo()
+            fileinfo.type = 5
+            fileinfo.aux.description = 'Some dummy data'
+            
+            ids_ = []
+            parts = store.list_partitions(dataset.uuid)
+            # reload menu and config
+            newmenu = Menu()
+            store.get(menu_uuid, newmenu)
+            newconfig = Configuration()
+            store.get(config_uuid, newconfig)
+            print(parts)
+            for _ in range(10):
+                job_id = store.new_job(dataset.uuid)
+                
+                for key in parts:
+                    ids_.append(store.register_content(buf, 
+                                                 fileinfo, 
+                                                 dataset_id=dataset.uuid, 
+                                                 job_id=job_id, 
+                                                 partition_key=key ).uuid)
+                    store.put(ids_[-1], buf)
+            
+            for id_ in ids_:
+                buf = pa.py_buffer(store.get(id_))
+                reader = pa.ipc.open_file(buf)
+                self.assertEqual(reader.num_record_batches, 10)
+            
+            # Save the store, reload
+            store.save_store()
+            newstore = BaseObjectStore(str(_path), 'test', store_uuid=store.store_uuid) 
+            for id_ in ids_:
+                print("Get object %s", id_)
+                print(type(id_))
+                buf = pa.py_buffer(newstore.get(id_))
+                reader = pa.ipc.open_file(buf)
+                self.assertEqual(reader.num_record_batches, 10)
+            print(newmenu)
+            print(newconfig)
+            print("Simulation Test Done ===========================")
+
+    def test_distributed(self):
+
+
+        print("Simulate production")
+        
+        mymenu = Menu() 
+        mymenu.uuid = str(uuid.uuid4())
+        mymenu.name = f"{mymenu.uuid}.menu.dat"
+
+        menuinfo = MenuObjectInfo()
+        menuinfo.created.GetCurrentTime()
+        bufmenu = pa.py_buffer(mymenu.SerializeToString())
+        
+        myconfig = Configuration() 
+        myconfig.uuid = str(uuid.uuid4())
+        myconfig.name = f"{myconfig.uuid}.config.dat"
+
+        configinfo = ConfigObjectInfo()
+        configinfo.created.GetCurrentTime()
+        bufconfig = pa.py_buffer(myconfig.SerializeToString())
+
+        dirpath = tempfile.mkdtemp()
+        _path = dirpath+'/test'
+        store = BaseObjectStore(str(_path), 'test') # wrapper to the CronusStore message
+        # Following puts the menu and config to the datastore
+        menu_uuid = store.register_content(mymenu, menuinfo).uuid
+        config_uuid = store.register_content(myconfig, configinfo).uuid
+        dataset = store.register_dataset(menu_uuid, config_uuid)
+        
+        # Multiple streams
+        store.new_partition(dataset.uuid, 'key1')
+        store.new_partition(dataset.uuid, 'key2')
+        store.new_partition(dataset.uuid, 'key3')
+        
+        # Persist the store for access in distributed jobs
+        store.save_store()
+        
+        ds_bufs = []
+        for _ in range(10):
+            job_id = store.new_job(dataset.uuid)
+            
+            ds_bufs.append(run_job(_path, 
+                    'test', 
+                    store.store_uuid,
+                    menu_uuid,
+                    config_uuid,
+                    dataset.uuid, 
+                    job_id))
+        results = dask.compute(*ds_bufs,scheduler='processes')
+        
+        # Update the dataset 
+        for buf in results:
+            store.update_dataset(dataset.uuid, buf)
+        # Save the store, reload
+        store.save_store()
+        
+        # Let's check everything was saved in metastore and datastore
+        newstore = BaseObjectStore(str(_path), 'test', store_uuid=store.store_uuid) 
+        ids_ = newstore.list(prefix=dataset.uuid, suffix='arrow')
+        
+        for id_ in ids_:
+            print("Get object %s", id_)
+            buf = pa.py_buffer(newstore.get(id_.uuid))
+            reader = pa.ipc.open_file(buf)
+            self.assertEqual(reader.num_record_batches, 10)
+        
+        # cleanup
+        if os.path.exists(dirpath):
+            shutil.rmtree(dirpath)
+
+
+@dask.delayed
+def run_job(root, 
+            store_name, 
+            store_id,
+            menu_id,
+            config_id,
+            dataset_id, 
+            job_id):
+    
+    runner = JobBuilder(root, 
+            store_name, 
+            store_id,
+            menu_id,
+            config_id,
+            dataset_id, 
+            job_id)
+    runner.execute()
+    msg = runner.buf
+    return msg
+
+        
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    test = CronusTestCase()
+    test.test_distributed()

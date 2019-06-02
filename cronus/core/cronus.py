@@ -16,10 +16,13 @@ import urllib.parse
 from dataclasses import dataclass
 
 import pyarrow as pa
+import numpy as np
 from storefact import get_store_from_url
 # from simplekv.fs import FilesystemStore
 
 from cronus.io.protobuf.cronus_pb2 import CronusObjectStore, CronusObject, FileType
+from cronus.io.protobuf.menu_pb2 import Menu
+from cronus.io.protobuf.configuration_pb2 import Configuration
 from cronus.logger import Logger
 from cronus.core.book import BaseBook
 
@@ -112,6 +115,8 @@ class BaseObjectStore(BaseBook):
                 for child in item.dataset.logs:
                     objects[child.uuid] = child
                 for child in item.dataset.jobs:
+                    objects[child.uuid] = child
+                for child in item.dataset.tables:
                     objects[child.uuid] = child
 
 
@@ -335,7 +340,41 @@ class BaseObjectStore(BaseBook):
         obj.address = self._dstore.url_for(obj.name)
         self[obj.uuid] = obj
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-    
+   
+    def update_dataset(self, dataset_id, buf):
+        '''
+        '''
+        _update = DatasetObjectInfo()
+        _update.ParseFromString(buf)
+        
+        parts = self[dataset_id].dataset.partitions
+
+        if parts != _update.partitions:
+            self.__logger.error("Paritions not equal")
+        objs = []
+        for obj in _update.jobs:
+            self[dataset_id].dataset.jobs.append(obj)
+            self[obj.uuid] = obj
+            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+        for obj in _update.hists:
+            self[dataset_id].dataset.hists.append(obj)
+            self[obj.uuid] = obj
+            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+        for obj in _update.files:
+            self[dataset_id].dataset.files.append(obj)
+            self[obj.uuid] = obj
+            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+        for obj in _update.logs:
+            self[dataset_id].dataset.logs.append(obj)
+            self[obj.uuid] = obj
+            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+        for obj in _update.tables:
+            self[dataset_id].dataset.logs.append(obj)
+            self[obj.uuid] = obj
+            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+
+
+
     def new_job(self, dataset_id): 
         '''
         Increment job counter of a dataset 
@@ -488,6 +527,7 @@ class BaseObjectStore(BaseBook):
         # Copy the info object
         obj.menu.CopyFrom(menuinfo)
         self[obj.uuid] = obj
+        self._put_message(obj.uuid, menu)
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
     def _register_config(self, config, configinfo):
@@ -508,6 +548,7 @@ class BaseObjectStore(BaseBook):
         # Copy the info object
         obj.config.CopyFrom(configinfo)
         self[obj.uuid] = obj
+        self._put_message(obj.uuid, config)
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
     def _register_partition_table(self, 
@@ -529,10 +570,11 @@ class BaseObjectStore(BaseBook):
                                 partition_key)
             raise ValueError
         
-        hash_ = self._compute_hash(pa.input_stream(buf))
+        #hash_ = self._compute_hash(pa.input_stream(buf))
         obj = self[dataset_id].info.tables.add()
-        obj.uuid = hash_
-        obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{hash_}.table"
+        #obj.uuid = hash_
+        obj.uuid = str(uuid.uuid4())
+        obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{obj.uuid}.table"
         obj.parent_uuid = dataset_id
         obj.address = self._dstore.url_for(obj.name)
         self.__logger.info("Retrieving url %s", obj.address)
@@ -564,8 +606,9 @@ class BaseObjectStore(BaseBook):
 
         key = str(FileType.Name(fileinfo.type)).lower()
         obj = self[dataset_id].dataset.files.add()
-        obj.uuid = self._compute_hash(pa.input_stream(buf))
-        
+        #obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.uuid = str(uuid.uuid4())
+
         if obj.uuid in self:
             if obj.uuid in self._dups:
                 self._dups[obj.uuid] += 1
@@ -619,7 +662,7 @@ class BaseObjectStore(BaseBook):
         job_id = self[dataset_id].dataset.job_id
         obj.uuid = self._compute_hash(pa.input_stream(buf))
         obj.parent_uuid = dataset_id 
-        obj.name = f"{dataset_id}.job_{job_id}.{hash_}.hist"
+        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.hist"
         obj.address = self._dstore.url_for(obj.name)
         obj.hists.CopyFrom(histinfo)
         
@@ -777,3 +820,77 @@ class BaseObjectStore(BaseBook):
             self.__logger.error("Unknown error opening stream %s", path)
             raise
         return stream
+
+
+@Logger.logged
+class JobBuilder():
+    '''
+    Class the simulate functionality of Artemis
+    '''
+    def __init__(self,root, 
+            store_name, 
+            store_id,
+            menu_id,
+            config_id,
+            dataset_id, 
+            job_id):
+    
+        
+        self.dataset_id = dataset_id
+        self.job_id = job_id
+        
+        # Connect to the metastore
+        # Setup a datastore
+        self.store = BaseObjectStore(str(root), 'test', store_uuid=store_id) 
+        self.parts = self.store.list_partitions(dataset_id)
+        self.menu = Menu()
+        self.store.get(menu_id, self.menu)
+        self.config = Configuration()
+        # Get the menu and config to run the job
+        self.store.get(config_id, self.config)
+
+        self.buf = None
+    
+    def execute(self):
+        '''
+        Execute simulates creating data
+        creating associating metaobject
+        storing data and metadata
+
+        returns a serialized dataset object for updating
+        a final store
+        '''
+        self.__logger.info("Running job %s", self.job_id)
+        data = [
+                pa.array(np.random.rand(100000,)),
+                pa.array(np.random.rand(100000,)),
+                pa.array(np.random.rand(100000,)),
+                pa.array(np.random.rand(100000,)),
+                pa.array(np.random.rand(100000,)),
+                pa.array(np.random.rand(100000,)),
+                ]
+        batch = pa.RecordBatch.from_arrays(data, ['f0', 'f1', 'f2', 'f3', 'f4', 'f5'])
+        sink = pa.BufferOutputStream()
+        writer = pa.RecordBatchFileWriter(sink, batch.schema)
+
+        for i in range(10):
+            writer.write_batch(batch)
+
+        writer.close()
+        buf = sink.getvalue()
+        
+        fileinfo = FileObjectInfo()
+        fileinfo.type = 5
+        fileinfo.aux.description = 'Some dummy data'
+
+        
+        ids_=[]
+        for key in self.parts:
+            ids_.append(self.store.register_content(buf, 
+                                         fileinfo, 
+                                         dataset_id=self.dataset_id, 
+                                         job_id=self.job_id, 
+                                         partition_key=key ).uuid)
+            self.store.put(ids_[-1], buf)
+        buf_ds = self.store[self.dataset_id].dataset.SerializeToString()
+        self.buf = buf_ds
