@@ -96,7 +96,7 @@ store.new_partition(dataset.uuid, 'key3')
 ```
 
 Metadata content is retained in Info objects associated with the metaobject holding the data content address.
-ObjectInfo protocol buffer models represented the basic object types for our metadata. Auxillary objects
+ObjectInfo protocol buffer models represent the basic object types for our metadata. Auxillary objects
 can be added to extend the model.
 
 ```python
@@ -131,6 +131,7 @@ for _ in range(10):
 ```
 
 The following shows how to retrieve the content from the unique identifier. 
+```python
 for id_ in ids_:
     buf = pa.py_buffer(store.get(id_))
     reader = pa.ipc.open_file(buf)
