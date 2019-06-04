@@ -9,6 +9,8 @@ setup(name='cronus',
             "protobuf",
             "pyarrow>=0.13",
             "simplekv>=0.12",
-            "storefact"
+            "storefact",
+            "dask[delayed]",
+            "dask[distributed]"
             ],
       description="Metastore for Artemis")
