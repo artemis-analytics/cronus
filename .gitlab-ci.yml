@@ -64,7 +64,6 @@ test:
   variables:
     DOCKER_DRIVER: overlay2
   script:
-    - pip install pyarrow 
     - pip install coverage
     - python setup.py install
     - coverage3 run --source=cronus/ -m unittest
