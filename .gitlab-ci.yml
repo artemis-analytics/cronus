@@ -64,7 +64,7 @@ test:
   variables:
     DOCKER_DRIVER: overlay2
   script:
-    - yum install cmake
+    - sudo yum install cmake
     - pip install coverage
     - python setup.py install
     - coverage3 run --source=cronus/ -m unittest
