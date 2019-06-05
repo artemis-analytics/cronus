@@ -67,7 +67,7 @@ test:
     - conda info
     - echo "source activate env" > ~/.bashrc 
     - PATH=/opt/conda/envs/bin:$PATH
-    - conda activate env
+    - conda info 
     - pip install coverage
     - python setup.py install
     - python tests/test_cronus.py
