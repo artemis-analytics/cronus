@@ -64,6 +64,7 @@ test:
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
+      - conda init /bin/bash
       - conda activate env
   script:
     - echo $SHELL
