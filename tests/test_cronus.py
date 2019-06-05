@@ -677,6 +677,4 @@ def run_job(root,
 
         
 if __name__ == '__main__':
-    #unittest.main()
-    test = CronusTestCase()
-    test.test_distributed()
+    unittest.main()
