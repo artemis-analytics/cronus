@@ -65,9 +65,6 @@ test:
     DOCKER_DRIVER: overlay2
   script:
     - conda info
-    - echo "source activate env" > ~/.bashrc 
-    - PATH=/opt/conda/envs/bin:$PATH
-    - conda info 
     - pip install coverage
     - python setup.py install
     - python tests/test_cronus.py
