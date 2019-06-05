@@ -63,10 +63,11 @@ test:
   image: registry.k8s.cloud.statcan.ca/stcdatascience/dockers/miniconda-python3.7:latest
   variables:
     DOCKER_DRIVER: overlay2
+  before_script:
+      - conda activate env
   script:
     - echo $SHELL
     - conda info
-    - conda activate env
     - pip install coverage
     - python setup.py install
     - python tests/test_cronus.py
