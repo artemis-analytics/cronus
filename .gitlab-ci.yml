@@ -65,7 +65,8 @@ test:
     DOCKER_DRIVER: overlay2
   script:
     - conda info
-    - conda init
+    - echo "source activate env" > ~/.bashrc 
+    - PATH=/opt/conda/envs/bin:$PATH
     - conda activate env
     - pip install coverage
     - python setup.py install
