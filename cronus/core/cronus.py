@@ -353,25 +353,30 @@ class BaseObjectStore(BaseBook):
             self.__logger.error("Paritions not equal")
         objs = []
         for obj in _update.jobs:
-            self[dataset_id].dataset.jobs.append(obj)
-            self[obj.uuid] = obj
-            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+            _new = self[dataset_id].dataset.jobs.add()
+            _new.CopyFrom(obj)
+            self[_new.uuid] = _new
+            objs.append(MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address))
         for obj in _update.hists:
-            self[dataset_id].dataset.hists.append(obj)
-            self[obj.uuid] = obj
-            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+            _new = self[dataset_id].dataset.hists.add()
+            _new.CopyFrom(obj)
+            self[_new.uuid] = _new
+            objs.append(MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address))
         for obj in _update.files:
-            self[dataset_id].dataset.files.append(obj)
-            self[obj.uuid] = obj
-            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+            _new = self[dataset_id].dataset.files.add()
+            _new.CopyFrom(obj)
+            self[_new.uuid] = _new
+            objs.append(MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address))
         for obj in _update.logs:
-            self[dataset_id].dataset.logs.append(obj)
-            self[obj.uuid] = obj
-            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+            _new = self[dataset_id].dataset.logs.add()
+            _new.CopyFrom(obj)
+            self[_new.uuid] = _new
+            objs.append(MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address))
         for obj in _update.tables:
-            self[dataset_id].dataset.logs.append(obj)
-            self[obj.uuid] = obj
-            objs.append(MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address))
+            _new = self[dataset_id].dataset.logs.add()
+            _new.CopyFrom(obj)
+            self[_new.uuid] = _new
+            objs.append(MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address))
 
 
 
