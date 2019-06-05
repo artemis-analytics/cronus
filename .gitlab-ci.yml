@@ -69,6 +69,7 @@ test:
   script:
     - echo $SHELL
     - conda info
+    - conda list
     - pip install coverage
     - python setup.py install
     - python tests/test_cronus.py
