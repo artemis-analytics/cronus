@@ -64,7 +64,9 @@ test:
   variables:
     DOCKER_DRIVER: overlay2
   script:
+    - echo $SHELL
     - conda info
+    - conda activate env
     - pip install coverage
     - python setup.py install
     - python tests/test_cronus.py
