@@ -45,6 +45,7 @@ variables:
 stages:
   - review  
   - test
+  - build
 
 review:
   stage: review
@@ -71,12 +72,30 @@ test:
     - conda info
     - conda list
     - pip install coverage
+    - python setup.py sdist bdist_wheel
+  only:
+    - branches
+  artifacts:
+      - dist/cronus*gz
+
+build:
+  stage: build
+  image: registry.k8s.cloud.statcan.ca/stcdatascience/dockers/miniconda-python3.7:latest
+  variables:
+    DOCKER_DRIVER: overlay2
+  before_script:
+      - conda init bash
+      - source activate env 
+  script:
+    - echo $SHELL
+    - conda info
+    - conda list
+    - pip install coverage
     - python setup.py install
     - python tests/test_cronus.py
     - ls
   only:
     - branches
-
 # ---------------------------------------------------------------------------
 
 .auto_devops: &auto_devops |
