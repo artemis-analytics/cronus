@@ -1,5 +1,6 @@
 syntax = "proto3";
 package cronus;
+// import "google/protobuf/timestamp.proto";
 
 
 message Table {
@@ -35,14 +36,62 @@ message Field {
   FieldInfo info = 3;
 }
 
+enum ArrowType {
+  EMPTY = 0;
+  NULL = 1;
+  STRUCT = 2;
+  LIST = 3;
+  UNION = 4;
+  INT = 5;
+  FLOATPOINT = 6;
+  UTF8 = 7;
+  BINARY = 8;
+  FIXEDSIZEBINARY = 9;
+  BOOL = 10;
+  DECIMAL = 11;
+  DATE = 12;
+  TIME = 13;
+  TIMESTAMP = 14;
+  INTERMAL = 15;
+}
+
+enum DatabaseType {
+  NONE = 0;
+  CHAR = 1;
+  NUM = 2;
+  OTHER = 3;
+}
+
 message FieldInfo {
   FieldAuxInfo aux = 1;
-  string type = 2;
+  DatabaseType type = 2;
   bool nullable = 3;
   repeated Field children = 4;
+  ArrowType arrow_type = 5;
+}
+
+message List { 
+  repeated Value values = 1;
+}
+
+enum NullValue {
+  NULL_VALUE = 0;
+}
+ 
+message Value {
+  string description = 1;
+  oneof value_type {
+    NullValue null_value = 2;
+    int32 int_value = 3;
+    string string_value = 4;
+    bool bool_value = 5;
+    List list_value = 6;
+  }
 }
 
 message FieldAuxInfo {
   string description = 1;
-  map<string, string> meta = 2; 
+  //repeated key-value store meta info
+  //value supports nested list
+  map<string, Value> meta = 2; 
 }
