@@ -76,7 +76,8 @@ test:
   only:
     - branches
   artifacts:
-      - dist/cronus*gz
+      paths:
+          - dist/
 
 build:
   stage: build
