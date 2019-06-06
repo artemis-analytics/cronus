@@ -632,7 +632,7 @@ class CronusTestCase(unittest.TestCase):
                     config_uuid,
                     dataset.uuid, 
                     job_id))
-        results = dask.compute(*ds_bufs,scheduler='processes')
+        results = dask.compute(*ds_bufs,scheduler='single-threaded')
         
         # Update the dataset 
         for buf in results:
