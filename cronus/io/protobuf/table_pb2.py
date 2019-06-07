@@ -21,9 +21,48 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='cronus',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0btable.proto\x12\x06\x63ronus\"D\n\x05Table\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.TableInfo\"+\n\tTableInfo\x12\x1e\n\x06schema\x18\x01 \x01(\x0b\x32\x0e.cronus.Schema\"F\n\x06Schema\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12 \n\x04info\x18\x03 \x01(\x0b\x32\x12.cronus.SchemaInfo\"O\n\nSchemaInfo\x12\"\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x15.cronus.SchemaAuxInfo\x12\x1d\n\x06\x66ields\x18\x02 \x03(\x0b\x32\r.cronus.Field\"L\n\rSchemaAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x12\n\nraw_header\x18\x02 \x01(\x0c\x12\x12\n\nraw_footer\x18\x03 \x01(\x0c\"D\n\x05\x46ield\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.FieldInfo\"\xac\x01\n\tFieldInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.FieldAuxInfo\x12\"\n\x04type\x18\x02 \x01(\x0e\x32\x14.cronus.DatabaseType\x12\x10\n\x08nullable\x18\x03 \x01(\x08\x12\x1f\n\x08\x63hildren\x18\x04 \x03(\x0b\x32\r.cronus.Field\x12%\n\narrow_type\x18\x05 \x01(\x0e\x32\x11.cronus.ArrowType\"%\n\x04List\x12\x1d\n\x06values\x18\x01 \x03(\x0b\x32\r.cronus.Value\"\xba\x01\n\x05Value\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\'\n\nnull_value\x18\x02 \x01(\x0e\x32\x11.cronus.NullValueH\x00\x12\x13\n\tint_value\x18\x03 \x01(\x05H\x00\x12\x16\n\x0cstring_value\x18\x04 \x01(\tH\x00\x12\x14\n\nbool_value\x18\x05 \x01(\x08H\x00\x12\"\n\nlist_value\x18\x06 \x01(\x0b\x32\x0c.cronus.ListH\x00\x42\x0c\n\nvalue_type\"\x8d\x01\n\x0c\x46ieldAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12,\n\x04meta\x18\x02 \x03(\x0b\x32\x1e.cronus.FieldAuxInfo.MetaEntry\x1a:\n\tMetaEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1c\n\x05value\x18\x02 \x01(\x0b\x32\r.cronus.Value:\x02\x38\x01*\xcd\x01\n\tArrowType\x12\t\n\x05\x45MPTY\x10\x00\x12\x08\n\x04NULL\x10\x01\x12\n\n\x06STRUCT\x10\x02\x12\x08\n\x04LIST\x10\x03\x12\t\n\x05UNION\x10\x04\x12\x07\n\x03INT\x10\x05\x12\x0e\n\nFLOATPOINT\x10\x06\x12\x08\n\x04UTF8\x10\x07\x12\n\n\x06\x42INARY\x10\x08\x12\x13\n\x0f\x46IXEDSIZEBINARY\x10\t\x12\x08\n\x04\x42OOL\x10\n\x12\x0b\n\x07\x44\x45\x43IMAL\x10\x0b\x12\x08\n\x04\x44\x41TE\x10\x0c\x12\x08\n\x04TIME\x10\r\x12\r\n\tTIMESTAMP\x10\x0e\x12\x0c\n\x08INTERMAL\x10\x0f*6\n\x0c\x44\x61tabaseType\x12\x08\n\x04NONE\x10\x00\x12\x08\n\x04\x43HAR\x10\x01\x12\x07\n\x03NUM\x10\x02\x12\t\n\x05OTHER\x10\x03*\x1b\n\tNullValue\x12\x0e\n\nNULL_VALUE\x10\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0btable.proto\x12\x06\x63ronus\"D\n\x05Table\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.TableInfo\"+\n\tTableInfo\x12\x1e\n\x06schema\x18\x01 \x01(\x0b\x32\x0e.cronus.Schema\"F\n\x06Schema\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12 \n\x04info\x18\x03 \x01(\x0b\x32\x12.cronus.SchemaInfo\"O\n\nSchemaInfo\x12\"\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x15.cronus.SchemaAuxInfo\x12\x1d\n\x06\x66ields\x18\x02 \x03(\x0b\x32\r.cronus.Field\"r\n\rSchemaAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x12\n\nraw_header\x18\x02 \x01(\x0c\x12\x12\n\nraw_footer\x18\x03 \x01(\x0c\x12$\n\tfrequency\x18\x04 \x01(\x0e\x32\x11.cronus.Frequency\"D\n\x05\x46ield\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.FieldInfo\"\xf4\x01\n\tFieldInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.FieldAuxInfo\x12\x1c\n\x04\x63har\x18\x02 \x01(\x0e\x32\x0c.cronus.CharH\x00\x12\x1a\n\x03num\x18\x03 \x01(\x0e\x32\x0b.cronus.NumH\x00\x12\x0f\n\x05other\x18\x04 \x01(\tH\x00\x12\x0e\n\x06length\x18\x05 \x01(\x05\x12\x10\n\x08nullable\x18\x06 \x01(\x08\x12\x1f\n\x08\x63hildren\x18\x07 \x03(\x0b\x32\r.cronus.Field\x12%\n\narrow_type\x18\x08 \x01(\x0e\x32\x11.cronus.ArrowTypeB\x0f\n\roriginal_type\"%\n\x04List\x12\x1d\n\x06values\x18\x01 \x03(\x0b\x32\r.cronus.Value\"\xaf\x01\n\x05Value\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x1c\n\x04null\x18\x02 \x01(\x0e\x32\x0c.cronus.NullH\x00\x12\x13\n\tint_value\x18\x03 \x01(\x05H\x00\x12\x16\n\x0cstring_value\x18\x04 \x01(\tH\x00\x12\x14\n\nbool_value\x18\x05 \x01(\x08H\x00\x12\"\n\nlist_value\x18\x06 \x01(\x0b\x32\x0c.cronus.ListH\x00\x42\x0c\n\nvalue_type\"\xa3\x01\n\x0c\x46ieldAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12,\n\x04meta\x18\x02 \x03(\x0b\x32\x1e.cronus.FieldAuxInfo.MetaEntry\x12\x14\n\x0cis_raw_field\x18\x03 \x01(\x08\x1a:\n\tMetaEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1c\n\x05value\x18\x02 \x01(\x0b\x32\r.cronus.Value:\x02\x38\x01*V\n\tFrequency\x12\x08\n\x04NONE\x10\x00\x12\t\n\x05\x44\x41ILY\x10\x01\x12\n\n\x06WEEKLY\x10\x02\x12\x0b\n\x07MONTHLY\x10\x03\x12\r\n\tQUARTERLY\x10\x04\x12\x0c\n\x08\x41NNUALLY\x10\x05*\xcd\x01\n\tArrowType\x12\t\n\x05\x45MPTY\x10\x00\x12\x08\n\x04NULL\x10\x01\x12\n\n\x06STRUCT\x10\x02\x12\x08\n\x04LIST\x10\x03\x12\t\n\x05UNION\x10\x04\x12\x07\n\x03INT\x10\x05\x12\x0e\n\nFLOATPOINT\x10\x06\x12\x08\n\x04UTF8\x10\x07\x12\n\n\x06\x42INARY\x10\x08\x12\x13\n\x0f\x46IXEDSIZEBINARY\x10\t\x12\x08\n\x04\x42OOL\x10\n\x12\x0b\n\x07\x44\x45\x43IMAL\x10\x0b\x12\x08\n\x04\x44\x41TE\x10\x0c\x12\x08\n\x04TIME\x10\r\x12\r\n\tTIMESTAMP\x10\x0e\x12\x0c\n\x08INTERMAL\x10\x0f*\x10\n\x04\x43har\x12\x08\n\x04\x43HAR\x10\x00*\x0e\n\x03Num\x12\x07\n\x03NUM\x10\x00*\x16\n\x04Null\x12\x0e\n\nNULL_VALUE\x10\x00\x62\x06proto3')
 )
 
+_FREQUENCY = _descriptor.EnumDescriptor(
+  name='Frequency',
+  full_name='cronus.Frequency',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='NONE', index=0, number=0,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DAILY', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='WEEKLY', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='MONTHLY', index=3, number=3,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='QUARTERLY', index=4, number=4,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='ANNUALLY', index=5, number=5,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=1107,
+  serialized_end=1193,
+)
+_sym_db.RegisterEnumDescriptor(_FREQUENCY)
+
+Frequency = enum_type_wrapper.EnumTypeWrapper(_FREQUENCY)
 _ARROWTYPE = _descriptor.EnumDescriptor(
   name='ArrowType',
   full_name='cronus.ArrowType',
@@ -97,46 +136,53 @@ _ARROWTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=987,
-  serialized_end=1192,
+  serialized_start=1196,
+  serialized_end=1401,
 )
 _sym_db.RegisterEnumDescriptor(_ARROWTYPE)
 
 ArrowType = enum_type_wrapper.EnumTypeWrapper(_ARROWTYPE)
-_DATABASETYPE = _descriptor.EnumDescriptor(
-  name='DatabaseType',
-  full_name='cronus.DatabaseType',
+_CHAR = _descriptor.EnumDescriptor(
+  name='Char',
+  full_name='cronus.Char',
   filename=None,
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='NONE', index=0, number=0,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='CHAR', index=1, number=1,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='NUM', index=2, number=2,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='OTHER', index=3, number=3,
+      name='CHAR', index=0, number=0,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1194,
-  serialized_end=1248,
+  serialized_start=1403,
+  serialized_end=1419,
 )
-_sym_db.RegisterEnumDescriptor(_DATABASETYPE)
+_sym_db.RegisterEnumDescriptor(_CHAR)
 
-DatabaseType = enum_type_wrapper.EnumTypeWrapper(_DATABASETYPE)
-_NULLVALUE = _descriptor.EnumDescriptor(
-  name='NullValue',
-  full_name='cronus.NullValue',
+Char = enum_type_wrapper.EnumTypeWrapper(_CHAR)
+_NUM = _descriptor.EnumDescriptor(
+  name='Num',
+  full_name='cronus.Num',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='NUM', index=0, number=0,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=1421,
+  serialized_end=1435,
+)
+_sym_db.RegisterEnumDescriptor(_NUM)
+
+Num = enum_type_wrapper.EnumTypeWrapper(_NUM)
+_NULL = _descriptor.EnumDescriptor(
+  name='Null',
+  full_name='cronus.Null',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -147,12 +193,18 @@ _NULLVALUE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1250,
-  serialized_end=1277,
+  serialized_start=1437,
+  serialized_end=1459,
 )
-_sym_db.RegisterEnumDescriptor(_NULLVALUE)
+_sym_db.RegisterEnumDescriptor(_NULL)
 
-NullValue = enum_type_wrapper.EnumTypeWrapper(_NULLVALUE)
+Null = enum_type_wrapper.EnumTypeWrapper(_NULL)
+NONE = 0
+DAILY = 1
+WEEKLY = 2
+MONTHLY = 3
+QUARTERLY = 4
+ANNUALLY = 5
 EMPTY = 0
 NULL = 1
 STRUCT = 2
@@ -169,10 +221,8 @@ DATE = 12
 TIME = 13
 TIMESTAMP = 14
 INTERMAL = 15
-NONE = 0
-CHAR = 1
-NUM = 2
-OTHER = 3
+CHAR = 0
+NUM = 0
 NULL_VALUE = 0
 
 
@@ -364,6 +414,13 @@ _SCHEMAAUXINFO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='frequency', full_name='cronus.SchemaAuxInfo.frequency', index=3,
+      number=4, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -377,7 +434,7 @@ _SCHEMAAUXINFO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=291,
-  serialized_end=367,
+  serialized_end=405,
 )
 
 
@@ -421,8 +478,8 @@ _FIELD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=369,
-  serialized_end=437,
+  serialized_start=407,
+  serialized_end=475,
 )
 
 
@@ -441,29 +498,50 @@ _FIELDINFO = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='type', full_name='cronus.FieldInfo.type', index=1,
+      name='char', full_name='cronus.FieldInfo.char', index=1,
       number=2, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='nullable', full_name='cronus.FieldInfo.nullable', index=2,
-      number=3, type=8, cpp_type=7, label=1,
+      name='num', full_name='cronus.FieldInfo.num', index=2,
+      number=3, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='other', full_name='cronus.FieldInfo.other', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='length', full_name='cronus.FieldInfo.length', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='nullable', full_name='cronus.FieldInfo.nullable', index=5,
+      number=6, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='children', full_name='cronus.FieldInfo.children', index=3,
-      number=4, type=11, cpp_type=10, label=3,
+      name='children', full_name='cronus.FieldInfo.children', index=6,
+      number=7, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='arrow_type', full_name='cronus.FieldInfo.arrow_type', index=4,
-      number=5, type=14, cpp_type=8, label=1,
+      name='arrow_type', full_name='cronus.FieldInfo.arrow_type', index=7,
+      number=8, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -479,9 +557,12 @@ _FIELDINFO = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
+    _descriptor.OneofDescriptor(
+      name='original_type', full_name='cronus.FieldInfo.original_type',
+      index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=440,
-  serialized_end=612,
+  serialized_start=478,
+  serialized_end=722,
 )
 
 
@@ -511,8 +592,8 @@ _LIST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=614,
-  serialized_end=651,
+  serialized_start=724,
+  serialized_end=761,
 )
 
 
@@ -531,7 +612,7 @@ _VALUE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='null_value', full_name='cronus.Value.null_value', index=1,
+      name='null', full_name='cronus.Value.null', index=1,
       number=2, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -580,8 +661,8 @@ _VALUE = _descriptor.Descriptor(
       name='value_type', full_name='cronus.Value.value_type',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=654,
-  serialized_end=840,
+  serialized_start=764,
+  serialized_end=939,
 )
 
 
@@ -618,8 +699,8 @@ _FIELDAUXINFO_METAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=926,
-  serialized_end=984,
+  serialized_start=1047,
+  serialized_end=1105,
 )
 
 _FIELDAUXINFO = _descriptor.Descriptor(
@@ -643,6 +724,13 @@ _FIELDAUXINFO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='is_raw_field', full_name='cronus.FieldAuxInfo.is_raw_field', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -655,8 +743,8 @@ _FIELDAUXINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=843,
-  serialized_end=984,
+  serialized_start=942,
+  serialized_end=1105,
 )
 
 _TABLE.fields_by_name['info'].message_type = _TABLEINFO
@@ -664,17 +752,28 @@ _TABLEINFO.fields_by_name['schema'].message_type = _SCHEMA
 _SCHEMA.fields_by_name['info'].message_type = _SCHEMAINFO
 _SCHEMAINFO.fields_by_name['aux'].message_type = _SCHEMAAUXINFO
 _SCHEMAINFO.fields_by_name['fields'].message_type = _FIELD
+_SCHEMAAUXINFO.fields_by_name['frequency'].enum_type = _FREQUENCY
 _FIELD.fields_by_name['info'].message_type = _FIELDINFO
 _FIELDINFO.fields_by_name['aux'].message_type = _FIELDAUXINFO
-_FIELDINFO.fields_by_name['type'].enum_type = _DATABASETYPE
+_FIELDINFO.fields_by_name['char'].enum_type = _CHAR
+_FIELDINFO.fields_by_name['num'].enum_type = _NUM
 _FIELDINFO.fields_by_name['children'].message_type = _FIELD
 _FIELDINFO.fields_by_name['arrow_type'].enum_type = _ARROWTYPE
+_FIELDINFO.oneofs_by_name['original_type'].fields.append(
+  _FIELDINFO.fields_by_name['char'])
+_FIELDINFO.fields_by_name['char'].containing_oneof = _FIELDINFO.oneofs_by_name['original_type']
+_FIELDINFO.oneofs_by_name['original_type'].fields.append(
+  _FIELDINFO.fields_by_name['num'])
+_FIELDINFO.fields_by_name['num'].containing_oneof = _FIELDINFO.oneofs_by_name['original_type']
+_FIELDINFO.oneofs_by_name['original_type'].fields.append(
+  _FIELDINFO.fields_by_name['other'])
+_FIELDINFO.fields_by_name['other'].containing_oneof = _FIELDINFO.oneofs_by_name['original_type']
 _LIST.fields_by_name['values'].message_type = _VALUE
-_VALUE.fields_by_name['null_value'].enum_type = _NULLVALUE
+_VALUE.fields_by_name['null'].enum_type = _NULL
 _VALUE.fields_by_name['list_value'].message_type = _LIST
 _VALUE.oneofs_by_name['value_type'].fields.append(
-  _VALUE.fields_by_name['null_value'])
-_VALUE.fields_by_name['null_value'].containing_oneof = _VALUE.oneofs_by_name['value_type']
+  _VALUE.fields_by_name['null'])
+_VALUE.fields_by_name['null'].containing_oneof = _VALUE.oneofs_by_name['value_type']
 _VALUE.oneofs_by_name['value_type'].fields.append(
   _VALUE.fields_by_name['int_value'])
 _VALUE.fields_by_name['int_value'].containing_oneof = _VALUE.oneofs_by_name['value_type']
@@ -700,9 +799,11 @@ DESCRIPTOR.message_types_by_name['FieldInfo'] = _FIELDINFO
 DESCRIPTOR.message_types_by_name['List'] = _LIST
 DESCRIPTOR.message_types_by_name['Value'] = _VALUE
 DESCRIPTOR.message_types_by_name['FieldAuxInfo'] = _FIELDAUXINFO
+DESCRIPTOR.enum_types_by_name['Frequency'] = _FREQUENCY
 DESCRIPTOR.enum_types_by_name['ArrowType'] = _ARROWTYPE
-DESCRIPTOR.enum_types_by_name['DatabaseType'] = _DATABASETYPE
-DESCRIPTOR.enum_types_by_name['NullValue'] = _NULLVALUE
+DESCRIPTOR.enum_types_by_name['Char'] = _CHAR
+DESCRIPTOR.enum_types_by_name['Num'] = _NUM
+DESCRIPTOR.enum_types_by_name['Null'] = _NULL
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Table = _reflection.GeneratedProtocolMessageType('Table', (_message.Message,), dict(

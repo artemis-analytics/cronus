@@ -24,10 +24,21 @@ message SchemaInfo {
   repeated Field fields = 2;
 }
 
+//Frequency which new data is received
+enum Frequency {
+  NONE = 0;
+  DAILY = 1;
+  WEEKLY = 2;
+  MONTHLY = 3;
+  QUARTERLY = 4;
+  ANNUALLY = 5;
+}
+
 message SchemaAuxInfo {
   string description = 1;
   bytes raw_header = 2;
   bytes raw_footer = 3;
+  Frequency frequency = 4;
 }
 
 message Field {
@@ -55,33 +66,40 @@ enum ArrowType {
   INTERMAL = 15;
 }
 
-enum DatabaseType {
-  NONE = 0;
-  CHAR = 1;
-  NUM = 2;
-  OTHER = 3;
+enum Char {
+  CHAR = 0;
+}
+enum Num {
+  NUM = 0;
+}
+enum Null {
+  NULL_VALUE = 0;
 }
 
 message FieldInfo {
   FieldAuxInfo aux = 1;
-  DatabaseType type = 2;
-  bool nullable = 3;
-  repeated Field children = 4;
-  ArrowType arrow_type = 5;
+  //The type of the raw data (before converting to Arrow type)
+  //This variable is not needed since we can obtain this 
+  //  information by tracking back to parent field
+  oneof original_type {
+    Char char = 2;
+    Num num = 3;
+    string other = 4;
+  }
+  int32 length = 5;
+  bool nullable = 6;
+  repeated Field children = 7;
+  ArrowType arrow_type = 8;
 }
 
 message List { 
   repeated Value values = 1;
 }
 
-enum NullValue {
-  NULL_VALUE = 0;
-}
- 
 message Value {
   string description = 1;
   oneof value_type {
-    NullValue null_value = 2;
+    Null null = 2;
     int32 int_value = 3;
     string string_value = 4;
     bool bool_value = 5;
@@ -94,4 +112,5 @@ message FieldAuxInfo {
   //repeated key-value store meta info
   //value supports nested list
   map<string, Value> meta = 2; 
+  bool is_raw_field = 3; 
 }
