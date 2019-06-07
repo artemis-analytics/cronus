@@ -209,7 +209,7 @@ class BaseObjectStore(BaseBook):
         MetaObject dataclass
 
         '''
-        self.__logger.info("Registering content")
+        self.__logger.info("Registering content %s", kwargs)
 
         metaobj = None
         dataset_id = kwargs.get('dataset_id', None)
@@ -220,7 +220,8 @@ class BaseObjectStore(BaseBook):
         glob = kwargs.get('glob', None)
 
         content_type = type(content)
-
+        
+        self.__logger.info("%s %s %s", dataset_id, partition_key, job_id)
         if isinstance(info, FileObjectInfo):
             if dataset_id is None:
                 self.__logger.error("Registering file requires dataset id")
