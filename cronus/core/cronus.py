@@ -282,16 +282,33 @@ class BaseObjectStore(BaseBook):
             if job_id is None:
                 self.__logger.error("Registering hists requires job id")
                 raise ValueError
-            metaobj =  self._register_hists(content, info, dataset_id, job_id) 
+            try:
+                metaobj =  self._register_hists(info, 
+                                                dataset_id, 
+                                                job_id) 
+            except Exception:
+                self.__logger.error("Error registering hists")
         
-        elif isinstance(info, JobObjectInfo):
-            metaobj =  self._register_hists(content, info, dataset_id, job_id) 
+        #elif isinstance(info, JobObjectInfo):
+        #    metaobj =  self._register_hists(content, info, dataset_id, job_id) 
        
 
         # TODO Log file storage according to job_id
         # Logs -- how to register a log file correctly with output path?
-        # elif isinstance(info, LogObjectInfo):
-        #     obj.log.CopyFrom(info)
+        elif isinstance(info, LogObjectInfo):
+            if dataset_id is None:
+                self.__logger.error("Registering hists requires dataset id")
+                raise ValueError
+            if job_id is None:
+                self.__logger.error("Registering hists requires job id")
+                raise ValueError
+            try:
+                metaobj =  self._register_log(info, 
+                                              dataset_id, 
+                                              job_id) 
+            except Exception:
+                self.__logger.error("Error registering hists")
+             
         elif isinstance(info, TableObjectInfo):
             if dataset_id is None:
                 self.__logger.error("Registering file requires dataset id")
@@ -634,7 +651,6 @@ class BaseObjectStore(BaseBook):
         
 
     def _register_log(self,     
-                      buf, 
                       loginfo, 
                       dataset_id,
                       job_id):
@@ -647,11 +663,17 @@ class BaseObjectStore(BaseBook):
         extension hists.data
         dataset_id.job_name.log_id.dat
         '''
+        self.__logger.info("Register log")
         obj = self[dataset_id].dataset.logs.add()
-        pass
+        obj.uuid = str(uuid.uuid4())
+        obj.parent_uuid = dataset_id 
+        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.log"
+        obj.address = self._dstore.url_for(obj.name)
+        obj.log.CopyFrom(loginfo)
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
     def _register_hists(self, 
-                        buf, 
                         histsinfo, 
                         dataset_id,
                         job_id):
@@ -664,15 +686,14 @@ class BaseObjectStore(BaseBook):
         extension hists.data
         dataset_id.job_name.hists_id.dat
         '''
+        self.__logger.info("Register histogram")
         obj = self[dataset_id].dataset.hists.add()
-        job_id = self[dataset_id].dataset.job_id
-        obj.uuid = self._compute_hash(pa.input_stream(buf))
+        #obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.uuid = str(uuid.uuid4())
         obj.parent_uuid = dataset_id 
         obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.hist"
         obj.address = self._dstore.url_for(obj.name)
-        obj.hists.CopyFrom(histinfo)
-        
-        
+        obj.hists.CopyFrom(histsinfo)
         self[obj.uuid] = obj
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
     
