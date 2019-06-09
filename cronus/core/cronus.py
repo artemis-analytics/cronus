@@ -78,10 +78,9 @@ class BaseObjectStore(BaseBook):
         if store_uuid is None:
             # Generate a new store
             self.__logger.info("Generating new metastore")
-            
             self._mstore.uuid = str(uuid.uuid4())
-            self._mstore.address = self._dstore.url_for(self._mstore.uuid)
-            self._mstore.name = name
+            self._mstore.name = f"{self._mstore.uuid}.{name}.cronus.pb"
+            self._mstore.address = self._dstore.url_for(self._mstore.name)
             self._mstore.info.created.GetCurrentTime()
             self.__logger.info("Metastore ID %s", self._mstore.uuid)
             self.__logger.info("Storage location %s", self._mstore.address)
@@ -151,7 +150,8 @@ class BaseObjectStore(BaseBook):
 
         self._mstore.ParseFromString(buf)
         if name != self._mstore.name:
-            self.__logger.error("Name of store does not equal persisted store")
+            self.__logger.error("Store name mismatch expected: %s received: %s",
+                                self._mstore.name, name)
             raise ValueError
 
     def save_store(self):
