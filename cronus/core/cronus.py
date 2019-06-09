@@ -203,6 +203,7 @@ class BaseObjectStore(BaseBook):
         menu_id : uuid of a stored menu
         config_id : uuid of a stored configuration
         glob : pattern for selecting files in an existing directory
+        content : pass a serialized blob to compute hash for uuid
        
         Returns
         -------
@@ -283,19 +284,18 @@ class BaseObjectStore(BaseBook):
                 self.__logger.error("Registering hists requires job id")
                 raise ValueError
             try:
-                metaobj =  self._register_hists(info, 
+                metaobj =  self._register_hists(content,
+                                                info, 
                                                 dataset_id, 
                                                 job_id) 
             except Exception:
                 self.__logger.error("Error registering hists")
         
-        #elif isinstance(info, JobObjectInfo):
-        #    metaobj =  self._register_hists(content, info, dataset_id, job_id) 
-       
-
-        # TODO Log file storage according to job_id
-        # Logs -- how to register a log file correctly with output path?
         elif isinstance(info, LogObjectInfo):
+            self.__logger.error("To register a new log, use register_log")
+            raise TypeError
+
+        elif isinstance(info, JobObjectInfo):
             if dataset_id is None:
                 self.__logger.error("Registering hists requires dataset id")
                 raise ValueError
@@ -303,7 +303,8 @@ class BaseObjectStore(BaseBook):
                 self.__logger.error("Registering hists requires job id")
                 raise ValueError
             try:
-                metaobj =  self._register_log(info, 
+                metaobj =  self._register_job(content,
+                                              info, 
                                               dataset_id, 
                                               job_id) 
             except Exception:
@@ -329,7 +330,7 @@ class BaseObjectStore(BaseBook):
             raise ValueError
         return metaobj
     
-    def register_dataset(self, menu_id, config_id):
+    def register_dataset(self, menu_id=None, config_id=None):
         '''
         dataset creation
         occurs before persisting storing information
@@ -349,16 +350,41 @@ class BaseObjectStore(BaseBook):
         obj = self._mstore.info.objects.add()
         obj.uuid = str(uuid.uuid4())  # Register new datsets with UUID4
         obj.parent_uuid = self._uuid
-        obj.name = obj.uuid + '.dataset'
+        obj.name = f"{obj.uuid}.dataset"
 
         # Set the transform objects, assumes menu, config and datasets
         # all reside in one store
-        obj.dataset.transform.menu.CopyFrom(self[menu_id])
-        obj.dataset.transform.config.CopyFrom(self[config_id])
+        if menu_id is not None:
+            obj.dataset.transform.menu.CopyFrom(self[menu_id])
+        if config_id is not None:
+            obj.dataset.transform.config.CopyFrom(self[config_id])
         obj.address = self._dstore.url_for(obj.name)
         self[obj.uuid] = obj
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
    
+    def register_log(self, dataset_id, job_id):
+        '''
+        log file content
+
+
+        Parameters
+        ----------
+        dataset_id : uuid of a dataset
+        job_id : index of job for this log 
+
+        Returns
+        -------
+        MetaObject dataclass describing the log content object
+        '''
+        self.__logger.info("Register new log")
+        obj = self[dataset_id].dataset.logs.add()
+        obj.uuid = str(uuid.uuid4())
+        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.log"
+        obj.parent_uuid = dataset_id
+        obj.address = self._dstore.url_for(obj.name)
+        self[obj.uuid] = obj
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+    
     def update_dataset(self, dataset_id, buf):
         '''
         '''
@@ -575,7 +601,7 @@ class BaseObjectStore(BaseBook):
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
     def _register_partition_table(self, 
-                                  buf, 
+                                  table, 
                                   tableinfo, 
                                   dataset_id, 
                                   job_id,
@@ -594,15 +620,16 @@ class BaseObjectStore(BaseBook):
             raise ValueError
         
         #hash_ = self._compute_hash(pa.input_stream(buf))
-        obj = self[dataset_id].info.tables.add()
+        obj = self[dataset_id].dataset.tables.add()
         #obj.uuid = hash_
-        obj.uuid = str(uuid.uuid4())
-        obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{obj.uuid}.table"
+        obj.uuid = table.uuid 
+        obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{obj.uuid}.table.pb"
         obj.parent_uuid = dataset_id
         obj.address = self._dstore.url_for(obj.name)
         self.__logger.info("Retrieving url %s", obj.address)
         obj.table.CopyFrom(tableinfo) 
         self[obj.uuid] = obj
+        self._put_message(obj.uuid, table)
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
 
@@ -648,32 +675,9 @@ class BaseObjectStore(BaseBook):
         self[obj.uuid] = obj
         
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-        
 
-    def _register_log(self,     
-                      loginfo, 
-                      dataset_id,
-                      job_id):
-        '''
-        Requires 
-        uuid of dataset
-        generate a hists uuid from buffer
-        job key common to all jobs in a dataset
-        keep an running index of hists?
-        extension hists.data
-        dataset_id.job_name.log_id.dat
-        '''
-        self.__logger.info("Register log")
-        obj = self[dataset_id].dataset.logs.add()
-        obj.uuid = str(uuid.uuid4())
-        obj.parent_uuid = dataset_id 
-        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.log"
-        obj.address = self._dstore.url_for(obj.name)
-        obj.log.CopyFrom(loginfo)
-        self[obj.uuid] = obj
-        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
-
-    def _register_hists(self, 
+    def _register_hists(self,
+                        hists,
                         histsinfo, 
                         dataset_id,
                         job_id):
@@ -691,10 +695,38 @@ class BaseObjectStore(BaseBook):
         #obj.uuid = self._compute_hash(pa.input_stream(buf))
         obj.uuid = str(uuid.uuid4())
         obj.parent_uuid = dataset_id 
-        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.hist"
+        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.hist.pb"
         obj.address = self._dstore.url_for(obj.name)
         obj.hists.CopyFrom(histsinfo)
         self[obj.uuid] = obj
+        self._put_message(obj.uuid, hists)
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+    
+    def _register_job(self,
+                      meta,
+                      jobinfo, 
+                      dataset_id,
+                      job_id):
+        '''
+        Requires 
+        uuid of dataset
+        generate a hists uuid from buffer
+        job key common to all jobs in a dataset
+        keep an running index of hists?
+        extension hists.data
+        dataset_id.job_name.hists_id.dat
+        '''
+        self.__logger.info("Register job")
+        obj = self[dataset_id].dataset.jobs.add()
+        #obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.uuid = str(uuid.uuid4())
+        obj.parent_uuid = dataset_id 
+        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.job.pb"
+        obj.address = self._dstore.url_for(obj.name)
+        obj.job.CopyFrom(jobinfo)
+        self[obj.uuid] = obj
+        self._put_message(obj.uuid, meta)
+
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
     
     def _register_file(self, 
