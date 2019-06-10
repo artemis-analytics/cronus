@@ -573,7 +573,7 @@ class CronusTestCase(unittest.TestCase):
             
             # Save the store, reload
             store.save_store()
-            newstore = BaseObjectStore(str(_path), 'test', store_uuid=store.store_uuid) 
+            newstore = BaseObjectStore(str(_path), store._name, store_uuid=store.store_uuid) 
             for id_ in ids_:
                 print("Get object %s", id_)
                 print(type(id_))
@@ -626,7 +626,7 @@ class CronusTestCase(unittest.TestCase):
             job_id = store.new_job(dataset.uuid)
             
             ds_bufs.append(run_job(_path, 
-                    'test', 
+                    store._name, 
                     store.store_uuid,
                     menu_uuid,
                     config_uuid,
@@ -641,7 +641,7 @@ class CronusTestCase(unittest.TestCase):
         store.save_store()
         
         # Let's check everything was saved in metastore and datastore
-        newstore = BaseObjectStore(str(_path), 'test', store_uuid=store.store_uuid) 
+        newstore = BaseObjectStore(str(_path), store._name, store_uuid=store.store_uuid) 
         ids_ = newstore.list(prefix=dataset.uuid, suffix='arrow')
         
         for id_ in ids_:

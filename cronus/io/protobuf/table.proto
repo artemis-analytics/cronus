@@ -9,7 +9,13 @@ message Table {
 }
 
 message TableInfo {
-  Schema schema = 1;
+  TableAuxInfo aux = 1;
+  Schema schema = 2;
+}
+
+message TableAuxInfo {
+  Duplicate duplicate = 1;
+  RecordModifier record_modifier = 2;
 }
 
 message Schema {
@@ -39,10 +45,62 @@ message FieldInfo {
   FieldAuxInfo aux = 1;
   string type = 2;
   bool nullable = 3;
-  repeated Field children = 4;
+  int32 length = 4;
+  // repeated Field children = 4;
 }
 
 message FieldAuxInfo {
   string description = 1;
   map<string, string> meta = 2; 
+  Generator generator = 3;
+  string dependent = 6;
 }
+
+// Model for simutable generation
+message Generator {
+    string name = 1;
+    repeated Parameter parameters = 2;
+}
+
+message Parameter {
+    string name = 1;
+    float value = 2;
+    string type = 3;
+    Field variable = 4;
+}
+
+message Duplicate {
+    float probability = 1;
+    string distribution = 2;
+    int32 maximum = 3;
+}
+
+message RecordModifier {
+    int32 max_modifications_in_record = 1;
+    int32 max_field_modifiers = 2;
+    int32 max_record_modifiers = 3;
+    repeated Modifier fields = 4;
+}
+
+message Modifier {
+    string name = 1;
+    float selection = 2;
+    ModifierProbabilities probabilities = 3;
+}
+
+message ModifierProbabilities {
+    float insert = 1;
+    float delete = 2;
+    float substitute = 3;
+    float misspell = 4;
+    float transpose = 5;
+    float replace = 6;
+    float swap = 7;
+    float split = 8;
+    float merge = 9;
+    float nullify = 10;
+    float fill = 11;
+}
+
+
+
