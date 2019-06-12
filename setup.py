@@ -11,6 +11,7 @@ setup(name='cronus',
             "simplekv>=0.12",
             "storefact",
             "dask[delayed]",
-            "dask[distributed]"
+            "dask[distributed]",
+            "pygraphviz"
             ],
       description="Metastore for Artemis")
