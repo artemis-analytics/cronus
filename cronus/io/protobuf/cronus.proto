@@ -251,6 +251,7 @@ enum FileType {
   PARQUET = 4;
   ARROW = 5;
   ARROW_STREAM = 6;
+  SAS7BDAT = 7;
 }
 
 message FileObjectInfo {
