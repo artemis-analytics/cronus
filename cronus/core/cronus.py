@@ -395,6 +395,9 @@ class BaseObjectStore(BaseBook):
 
         if parts != _update.partitions:
             self.__logger.error("Paritions not equal")
+            self.__logger.error("Dataset %s", dataset_id)
+            self.__logger.error("Expected: %s", parts)
+            self.__logger.error(_update.partitions)
         objs = []
         for obj in _update.jobs:
             _new = self[dataset_id].dataset.jobs.add()

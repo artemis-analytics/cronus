@@ -259,6 +259,7 @@ message FileObjectInfo {
   FileType type = 2;
   int64 size_bytes = 3;
   repeated Block blocks = 4;
+  string partition = 5;
 }
 
 message FileObjectAuxInfo {
