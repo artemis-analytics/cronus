@@ -608,12 +608,13 @@ class BaseObjectStore(BaseBook):
                                   tableinfo, 
                                   dataset_id, 
                                   job_id,
-                                  partition_key):
+                                  partition_key,
+                                  file_id=None):
         '''
         dataset uuid
-        partition key
         job key
-        file uuid
+        partition key
+        file uuid -- optional for tables extracted from an input file or an output RecordBatchFile
         '''
         self.__logger.info("Registering table Dataset %s, Partition %s", dataset_id, partition_key)
         if partition_key not in self[dataset_id].dataset.partitions:
@@ -626,7 +627,7 @@ class BaseObjectStore(BaseBook):
         obj = self[dataset_id].dataset.tables.add()
         #obj.uuid = hash_
         obj.uuid = table.uuid 
-        obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{obj.uuid}.table.pb"
+        obj.name = table.name 
         obj.parent_uuid = dataset_id
         obj.address = self._dstore.url_for(obj.name)
         self.__logger.info("Retrieving url %s", obj.address)

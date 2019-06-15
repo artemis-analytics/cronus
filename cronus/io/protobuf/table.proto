@@ -34,6 +34,8 @@ message SchemaAuxInfo {
   string description = 1;
   bytes raw_header = 2;
   bytes raw_footer = 3;
+  uint64 raw_header_size_bytes = 4;
+  uint64 raw_footer_size_bytes = 5;
 }
 
 message Field {
