@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='table.proto',
   package='cronus',
   syntax='proto3',
-  serialized_pb=_b('\n\x0btable.proto\x12\x06\x63ronus\"D\n\x05Table\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.TableInfo\"N\n\tTableInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.TableAuxInfo\x12\x1e\n\x06schema\x18\x02 \x01(\x0b\x32\x0e.cronus.Schema\"e\n\x0cTableAuxInfo\x12$\n\tduplicate\x18\x01 \x01(\x0b\x32\x11.cronus.Duplicate\x12/\n\x0frecord_modifier\x18\x02 \x01(\x0b\x32\x16.cronus.RecordModifier\"F\n\x06Schema\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12 \n\x04info\x18\x03 \x01(\x0b\x32\x12.cronus.SchemaInfo\"O\n\nSchemaInfo\x12\"\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x15.cronus.SchemaAuxInfo\x12\x1d\n\x06\x66ields\x18\x02 \x03(\x0b\x32\r.cronus.Field\"L\n\rSchemaAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x12\n\nraw_header\x18\x02 \x01(\x0c\x12\x12\n\nraw_footer\x18\x03 \x01(\x0c\"D\n\x05\x46ield\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.FieldInfo\"^\n\tFieldInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.FieldAuxInfo\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x10\n\x08nullable\x18\x03 \x01(\x08\x12\x0e\n\x06length\x18\x04 \x01(\x05\"\xb7\x01\n\x0c\x46ieldAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12,\n\x04meta\x18\x02 \x03(\x0b\x32\x1e.cronus.FieldAuxInfo.MetaEntry\x12$\n\tgenerator\x18\x03 \x01(\x0b\x32\x11.cronus.Generator\x12\x11\n\tdependent\x18\x06 \x01(\t\x1a+\n\tMetaEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"@\n\tGenerator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12%\n\nparameters\x18\x02 \x03(\x0b\x32\x11.cronus.Parameter\"W\n\tParameter\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x02\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x1f\n\x08variable\x18\x04 \x01(\x0b\x32\r.cronus.Field\"G\n\tDuplicate\x12\x13\n\x0bprobability\x18\x01 \x01(\x02\x12\x14\n\x0c\x64istribution\x18\x02 \x01(\t\x12\x0f\n\x07maximum\x18\x03 \x01(\x05\"\x92\x01\n\x0eRecordModifier\x12#\n\x1bmax_modifications_in_record\x18\x01 \x01(\x05\x12\x1b\n\x13max_field_modifiers\x18\x02 \x01(\x05\x12\x1c\n\x14max_record_modifiers\x18\x03 \x01(\x05\x12 \n\x06\x66ields\x18\x04 \x03(\x0b\x32\x10.cronus.Modifier\"a\n\x08Modifier\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tselection\x18\x02 \x01(\x02\x12\x34\n\rprobabilities\x18\x03 \x01(\x0b\x32\x1d.cronus.ModifierProbabilities\"\xcc\x01\n\x15ModifierProbabilities\x12\x0e\n\x06insert\x18\x01 \x01(\x02\x12\x0e\n\x06\x64\x65lete\x18\x02 \x01(\x02\x12\x12\n\nsubstitute\x18\x03 \x01(\x02\x12\x10\n\x08misspell\x18\x04 \x01(\x02\x12\x11\n\ttranspose\x18\x05 \x01(\x02\x12\x0f\n\x07replace\x18\x06 \x01(\x02\x12\x0c\n\x04swap\x18\x07 \x01(\x02\x12\r\n\x05split\x18\x08 \x01(\x02\x12\r\n\x05merge\x18\t \x01(\x02\x12\x0f\n\x07nullify\x18\n \x01(\x02\x12\x0c\n\x04\x66ill\x18\x0b \x01(\x02\x62\x06proto3')
+  serialized_pb=_b('\n\x0btable.proto\x12\x06\x63ronus\"D\n\x05Table\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.TableInfo\"a\n\tTableInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.TableAuxInfo\x12\x1e\n\x06schema\x18\x02 \x01(\x0b\x32\x0e.cronus.Schema\x12\x11\n\tpartition\x18\x03 \x01(\t\"e\n\x0cTableAuxInfo\x12$\n\tduplicate\x18\x01 \x01(\x0b\x32\x11.cronus.Duplicate\x12/\n\x0frecord_modifier\x18\x02 \x01(\x0b\x32\x16.cronus.RecordModifier\"F\n\x06Schema\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12 \n\x04info\x18\x03 \x01(\x0b\x32\x12.cronus.SchemaInfo\"O\n\nSchemaInfo\x12\"\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x15.cronus.SchemaAuxInfo\x12\x1d\n\x06\x66ields\x18\x02 \x03(\x0b\x32\r.cronus.Field\"\x8a\x01\n\rSchemaAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x12\n\nraw_header\x18\x02 \x01(\x0c\x12\x12\n\nraw_footer\x18\x03 \x01(\x0c\x12\x1d\n\x15raw_header_size_bytes\x18\x04 \x01(\x04\x12\x1d\n\x15raw_footer_size_bytes\x18\x05 \x01(\x04\"D\n\x05\x46ield\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.FieldInfo\"^\n\tFieldInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.FieldAuxInfo\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x10\n\x08nullable\x18\x03 \x01(\x08\x12\x0e\n\x06length\x18\x04 \x01(\x05\"\xb7\x01\n\x0c\x46ieldAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12,\n\x04meta\x18\x02 \x03(\x0b\x32\x1e.cronus.FieldAuxInfo.MetaEntry\x12$\n\tgenerator\x18\x03 \x01(\x0b\x32\x11.cronus.Generator\x12\x11\n\tdependent\x18\x06 \x01(\t\x1a+\n\tMetaEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"@\n\tGenerator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12%\n\nparameters\x18\x02 \x03(\x0b\x32\x11.cronus.Parameter\"W\n\tParameter\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x02\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x1f\n\x08variable\x18\x04 \x01(\x0b\x32\r.cronus.Field\"G\n\tDuplicate\x12\x13\n\x0bprobability\x18\x01 \x01(\x02\x12\x14\n\x0c\x64istribution\x18\x02 \x01(\t\x12\x0f\n\x07maximum\x18\x03 \x01(\x05\"\x92\x01\n\x0eRecordModifier\x12#\n\x1bmax_modifications_in_record\x18\x01 \x01(\x05\x12\x1b\n\x13max_field_modifiers\x18\x02 \x01(\x05\x12\x1c\n\x14max_record_modifiers\x18\x03 \x01(\x05\x12 \n\x06\x66ields\x18\x04 \x03(\x0b\x32\x10.cronus.Modifier\"a\n\x08Modifier\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tselection\x18\x02 \x01(\x02\x12\x34\n\rprobabilities\x18\x03 \x01(\x0b\x32\x1d.cronus.ModifierProbabilities\"\xcc\x01\n\x15ModifierProbabilities\x12\x0e\n\x06insert\x18\x01 \x01(\x02\x12\x0e\n\x06\x64\x65lete\x18\x02 \x01(\x02\x12\x12\n\nsubstitute\x18\x03 \x01(\x02\x12\x10\n\x08misspell\x18\x04 \x01(\x02\x12\x11\n\ttranspose\x18\x05 \x01(\x02\x12\x0f\n\x07replace\x18\x06 \x01(\x02\x12\x0c\n\x04swap\x18\x07 \x01(\x02\x12\r\n\x05split\x18\x08 \x01(\x02\x12\r\n\x05merge\x18\t \x01(\x02\x12\x0f\n\x07nullify\x18\n \x01(\x02\x12\x0c\n\x04\x66ill\x18\x0b \x01(\x02\x62\x06proto3')
 )
 
 
@@ -91,6 +91,13 @@ _TABLEINFO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='partition', full_name='cronus.TableInfo.partition', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -104,7 +111,7 @@ _TABLEINFO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=93,
-  serialized_end=171,
+  serialized_end=190,
 )
 
 
@@ -141,8 +148,8 @@ _TABLEAUXINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=173,
-  serialized_end=274,
+  serialized_start=192,
+  serialized_end=293,
 )
 
 
@@ -186,8 +193,8 @@ _SCHEMA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=276,
-  serialized_end=346,
+  serialized_start=295,
+  serialized_end=365,
 )
 
 
@@ -224,8 +231,8 @@ _SCHEMAINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=348,
-  serialized_end=427,
+  serialized_start=367,
+  serialized_end=446,
 )
 
 
@@ -257,6 +264,20 @@ _SCHEMAAUXINFO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='raw_header_size_bytes', full_name='cronus.SchemaAuxInfo.raw_header_size_bytes', index=3,
+      number=4, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='raw_footer_size_bytes', full_name='cronus.SchemaAuxInfo.raw_footer_size_bytes', index=4,
+      number=5, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -269,8 +290,8 @@ _SCHEMAAUXINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=429,
-  serialized_end=505,
+  serialized_start=449,
+  serialized_end=587,
 )
 
 
@@ -314,8 +335,8 @@ _FIELD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=507,
-  serialized_end=575,
+  serialized_start=589,
+  serialized_end=657,
 )
 
 
@@ -366,8 +387,8 @@ _FIELDINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=577,
-  serialized_end=671,
+  serialized_start=659,
+  serialized_end=753,
 )
 
 
@@ -404,8 +425,8 @@ _FIELDAUXINFO_METAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=814,
-  serialized_end=857,
+  serialized_start=896,
+  serialized_end=939,
 )
 
 _FIELDAUXINFO = _descriptor.Descriptor(
@@ -455,8 +476,8 @@ _FIELDAUXINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=674,
-  serialized_end=857,
+  serialized_start=756,
+  serialized_end=939,
 )
 
 
@@ -493,8 +514,8 @@ _GENERATOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=859,
-  serialized_end=923,
+  serialized_start=941,
+  serialized_end=1005,
 )
 
 
@@ -545,8 +566,8 @@ _PARAMETER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=925,
-  serialized_end=1012,
+  serialized_start=1007,
+  serialized_end=1094,
 )
 
 
@@ -590,8 +611,8 @@ _DUPLICATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1014,
-  serialized_end=1085,
+  serialized_start=1096,
+  serialized_end=1167,
 )
 
 
@@ -642,8 +663,8 @@ _RECORDMODIFIER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1088,
-  serialized_end=1234,
+  serialized_start=1170,
+  serialized_end=1316,
 )
 
 
@@ -687,8 +708,8 @@ _MODIFIER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1236,
-  serialized_end=1333,
+  serialized_start=1318,
+  serialized_end=1415,
 )
 
 
@@ -788,8 +809,8 @@ _MODIFIERPROBABILITIES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1336,
-  serialized_end=1540,
+  serialized_start=1418,
+  serialized_end=1622,
 )
 
 _TABLE.fields_by_name['info'].message_type = _TABLEINFO
