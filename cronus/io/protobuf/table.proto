@@ -1,6 +1,5 @@
 syntax = "proto3";
 package cronus;
-// import "google/protobuf/timestamp.proto";
 
 
 message Table {
@@ -10,7 +9,14 @@ message Table {
 }
 
 message TableInfo {
-  Schema schema = 1;
+  TableAuxInfo aux = 1;
+  Schema schema = 2;
+  string partition = 3;
+}
+
+message TableAuxInfo {
+  Duplicate duplicate = 1;
+  RecordModifier record_modifier = 2;
 }
 
 message Schema {
@@ -24,21 +30,22 @@ message SchemaInfo {
   repeated Field fields = 2;
 }
 
-//Frequency which new data is received
 enum Frequency {
-  NONE = 0;
-  DAILY = 1;
-  WEEKLY = 2;
-  MONTHLY = 3;
-  QUARTERLY = 4;
-  ANNUALLY = 5;
+    NONE = 0;
+    DAILY = 1;
+    WEEKLY = 2;
+    MONTHLY = 3;
+    QUARTERLY = 4;
+    ANNUALLY = 5;
 }
 
 message SchemaAuxInfo {
   string description = 1;
   bytes raw_header = 2;
   bytes raw_footer = 3;
-  Frequency frequency = 4;
+  uint64 raw_header_size_bytes = 4;
+  uint64 raw_footer_size_bytes = 5;
+  Frequency frequency = 6;
 }
 
 message Field {
@@ -47,70 +54,94 @@ message Field {
   FieldInfo info = 3;
 }
 
-enum ArrowType {
-  EMPTY = 0;
-  NULL = 1;
-  STRUCT = 2;
-  LIST = 3;
-  UNION = 4;
-  INT = 5;
-  FLOATPOINT = 6;
-  UTF8 = 7;
-  BINARY = 8;
-  FIXEDSIZEBINARY = 9;
-  BOOL = 10;
-  DECIMAL = 11;
-  DATE = 12;
-  TIME = 13;
-  TIMESTAMP = 14;
-  INTERMAL = 15;
-}
-
-enum Char {
-  CHAR = 0;
-}
-enum Num {
-  NUM = 0;
-}
-enum Null {
-  NULL_VALUE = 0;
-}
-
 message FieldInfo {
   FieldAuxInfo aux = 1;
-  //The type of the raw data (before converting to Arrow type)
-  //This variable is not needed since we can obtain this 
-  //  information by tracking back to parent field
-  oneof original_type {
-    Char char = 2;
-    Num num = 3;
-    string other = 4;
-  }
-  int32 length = 5;
-  bool nullable = 6;
-  repeated Field children = 7;
-  ArrowType arrow_type = 8;
-}
-
-message List { 
-  repeated Value values = 1;
-}
-
-message Value {
-  string description = 1;
-  oneof value_type {
-    Null null = 2;
-    int32 int_value = 3;
-    string string_value = 4;
-    bool bool_value = 5;
-    List list_value = 6;
-  }
+  string type = 2;
+  bool nullable = 3;
+  int32 length = 4;
+  // repeated Field children = 4;
 }
 
 message FieldAuxInfo {
   string description = 1;
-  //repeated key-value store meta info
-  //value supports nested list
   map<string, Value> meta = 2; 
-  bool is_raw_field = 3; 
+  Codeset codeset = 7;
+  Generator generator = 3;
+  string dependent = 6;
 }
+
+message Value {
+  string description = 1;
+  Null null_val = 2;
+  int32 int_val = 3;
+  string string_val = 4;
+  bool bool_val = 5;
+  repeated Value values = 6;
+  map <string, Value> map_val = 7;
+}
+
+message Codeset {
+  string name = 1;
+  string version = 2;
+  repeated Codevalue codevalues = 3;
+}
+
+message Codevalue {
+  string code = 1;
+  string description = 2;
+  string lable = 3;
+  repeated string others = 4;
+}
+
+enum Null {
+  NULL= 0;
+}
+
+// Model for simutable generation
+message Generator {
+    string name = 1;
+    repeated Parameter parameters = 2;
+}
+
+message Parameter {
+    string name = 1;
+    float value = 2;
+    string type = 3;
+    Field variable = 4;
+}
+
+message Duplicate {
+    float probability = 1;
+    string distribution = 2;
+    int32 maximum = 3;
+}
+
+message RecordModifier {
+    int32 max_modifications_in_record = 1;
+    int32 max_field_modifiers = 2;
+    int32 max_record_modifiers = 3;
+    repeated Modifier fields = 4;
+}
+
+message Modifier {
+    string name = 1;
+    float selection = 2;
+    ModifierProbabilities probabilities = 3;
+}
+
+message ModifierProbabilities {
+    float insert = 1;
+    float delete = 2;
+    float substitute = 3;
+    float misspell = 4;
+    float transpose = 5;
+    float replace = 6;
+    float swap = 7;
+    float split = 8;
+    float merge = 9;
+    float nullify = 10;
+    float fill = 11;
+}
+
+
+

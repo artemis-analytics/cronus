@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='cronus',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0btable.proto\x12\x06\x63ronus\"D\n\x05Table\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.TableInfo\"+\n\tTableInfo\x12\x1e\n\x06schema\x18\x01 \x01(\x0b\x32\x0e.cronus.Schema\"F\n\x06Schema\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12 \n\x04info\x18\x03 \x01(\x0b\x32\x12.cronus.SchemaInfo\"O\n\nSchemaInfo\x12\"\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x15.cronus.SchemaAuxInfo\x12\x1d\n\x06\x66ields\x18\x02 \x03(\x0b\x32\r.cronus.Field\"r\n\rSchemaAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x12\n\nraw_header\x18\x02 \x01(\x0c\x12\x12\n\nraw_footer\x18\x03 \x01(\x0c\x12$\n\tfrequency\x18\x04 \x01(\x0e\x32\x11.cronus.Frequency\"D\n\x05\x46ield\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.FieldInfo\"\xf4\x01\n\tFieldInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.FieldAuxInfo\x12\x1c\n\x04\x63har\x18\x02 \x01(\x0e\x32\x0c.cronus.CharH\x00\x12\x1a\n\x03num\x18\x03 \x01(\x0e\x32\x0b.cronus.NumH\x00\x12\x0f\n\x05other\x18\x04 \x01(\tH\x00\x12\x0e\n\x06length\x18\x05 \x01(\x05\x12\x10\n\x08nullable\x18\x06 \x01(\x08\x12\x1f\n\x08\x63hildren\x18\x07 \x03(\x0b\x32\r.cronus.Field\x12%\n\narrow_type\x18\x08 \x01(\x0e\x32\x11.cronus.ArrowTypeB\x0f\n\roriginal_type\"%\n\x04List\x12\x1d\n\x06values\x18\x01 \x03(\x0b\x32\r.cronus.Value\"\xaf\x01\n\x05Value\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x1c\n\x04null\x18\x02 \x01(\x0e\x32\x0c.cronus.NullH\x00\x12\x13\n\tint_value\x18\x03 \x01(\x05H\x00\x12\x16\n\x0cstring_value\x18\x04 \x01(\tH\x00\x12\x14\n\nbool_value\x18\x05 \x01(\x08H\x00\x12\"\n\nlist_value\x18\x06 \x01(\x0b\x32\x0c.cronus.ListH\x00\x42\x0c\n\nvalue_type\"\xa3\x01\n\x0c\x46ieldAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12,\n\x04meta\x18\x02 \x03(\x0b\x32\x1e.cronus.FieldAuxInfo.MetaEntry\x12\x14\n\x0cis_raw_field\x18\x03 \x01(\x08\x1a:\n\tMetaEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1c\n\x05value\x18\x02 \x01(\x0b\x32\r.cronus.Value:\x02\x38\x01*V\n\tFrequency\x12\x08\n\x04NONE\x10\x00\x12\t\n\x05\x44\x41ILY\x10\x01\x12\n\n\x06WEEKLY\x10\x02\x12\x0b\n\x07MONTHLY\x10\x03\x12\r\n\tQUARTERLY\x10\x04\x12\x0c\n\x08\x41NNUALLY\x10\x05*\xcd\x01\n\tArrowType\x12\t\n\x05\x45MPTY\x10\x00\x12\x08\n\x04NULL\x10\x01\x12\n\n\x06STRUCT\x10\x02\x12\x08\n\x04LIST\x10\x03\x12\t\n\x05UNION\x10\x04\x12\x07\n\x03INT\x10\x05\x12\x0e\n\nFLOATPOINT\x10\x06\x12\x08\n\x04UTF8\x10\x07\x12\n\n\x06\x42INARY\x10\x08\x12\x13\n\x0f\x46IXEDSIZEBINARY\x10\t\x12\x08\n\x04\x42OOL\x10\n\x12\x0b\n\x07\x44\x45\x43IMAL\x10\x0b\x12\x08\n\x04\x44\x41TE\x10\x0c\x12\x08\n\x04TIME\x10\r\x12\r\n\tTIMESTAMP\x10\x0e\x12\x0c\n\x08INTERMAL\x10\x0f*\x10\n\x04\x43har\x12\x08\n\x04\x43HAR\x10\x00*\x0e\n\x03Num\x12\x07\n\x03NUM\x10\x00*\x16\n\x04Null\x12\x0e\n\nNULL_VALUE\x10\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0btable.proto\x12\x06\x63ronus\"D\n\x05Table\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.TableInfo\"a\n\tTableInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.TableAuxInfo\x12\x1e\n\x06schema\x18\x02 \x01(\x0b\x32\x0e.cronus.Schema\x12\x11\n\tpartition\x18\x03 \x01(\t\"e\n\x0cTableAuxInfo\x12$\n\tduplicate\x18\x01 \x01(\x0b\x32\x11.cronus.Duplicate\x12/\n\x0frecord_modifier\x18\x02 \x01(\x0b\x32\x16.cronus.RecordModifier\"F\n\x06Schema\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12 \n\x04info\x18\x03 \x01(\x0b\x32\x12.cronus.SchemaInfo\"O\n\nSchemaInfo\x12\"\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x15.cronus.SchemaAuxInfo\x12\x1d\n\x06\x66ields\x18\x02 \x03(\x0b\x32\r.cronus.Field\"\xb0\x01\n\rSchemaAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x12\n\nraw_header\x18\x02 \x01(\x0c\x12\x12\n\nraw_footer\x18\x03 \x01(\x0c\x12\x1d\n\x15raw_header_size_bytes\x18\x04 \x01(\x04\x12\x1d\n\x15raw_footer_size_bytes\x18\x05 \x01(\x04\x12$\n\tfrequency\x18\x06 \x01(\x0e\x32\x11.cronus.Frequency\"D\n\x05\x46ield\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04uuid\x18\x02 \x01(\t\x12\x1f\n\x04info\x18\x03 \x01(\x0b\x32\x11.cronus.FieldInfo\"^\n\tFieldInfo\x12!\n\x03\x61ux\x18\x01 \x01(\x0b\x32\x14.cronus.FieldAuxInfo\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x10\n\x08nullable\x18\x03 \x01(\x08\x12\x0e\n\x06length\x18\x04 \x01(\x05\"\xe8\x01\n\x0c\x46ieldAuxInfo\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12,\n\x04meta\x18\x02 \x03(\x0b\x32\x1e.cronus.FieldAuxInfo.MetaEntry\x12 \n\x07\x63odeset\x18\x07 \x01(\x0b\x32\x0f.cronus.Codeset\x12$\n\tgenerator\x18\x03 \x01(\x0b\x32\x11.cronus.Generator\x12\x11\n\tdependent\x18\x06 \x01(\t\x1a:\n\tMetaEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1c\n\x05value\x18\x02 \x01(\x0b\x32\r.cronus.Value:\x02\x38\x01\"\xfc\x01\n\x05Value\x12\x13\n\x0b\x64\x65scription\x18\x01 \x01(\t\x12\x1e\n\x08null_val\x18\x02 \x01(\x0e\x32\x0c.cronus.Null\x12\x0f\n\x07int_val\x18\x03 \x01(\x05\x12\x12\n\nstring_val\x18\x04 \x01(\t\x12\x10\n\x08\x62ool_val\x18\x05 \x01(\x08\x12\x1d\n\x06values\x18\x06 \x03(\x0b\x32\r.cronus.Value\x12*\n\x07map_val\x18\x07 \x03(\x0b\x32\x19.cronus.Value.MapValEntry\x1a<\n\x0bMapValEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x1c\n\x05value\x18\x02 \x01(\x0b\x32\r.cronus.Value:\x02\x38\x01\"O\n\x07\x43odeset\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t\x12%\n\ncodevalues\x18\x03 \x03(\x0b\x32\x11.cronus.Codevalue\"M\n\tCodevalue\x12\x0c\n\x04\x63ode\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\r\n\x05lable\x18\x03 \x01(\t\x12\x0e\n\x06others\x18\x04 \x03(\t\"@\n\tGenerator\x12\x0c\n\x04name\x18\x01 \x01(\t\x12%\n\nparameters\x18\x02 \x03(\x0b\x32\x11.cronus.Parameter\"W\n\tParameter\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x02\x12\x0c\n\x04type\x18\x03 \x01(\t\x12\x1f\n\x08variable\x18\x04 \x01(\x0b\x32\r.cronus.Field\"G\n\tDuplicate\x12\x13\n\x0bprobability\x18\x01 \x01(\x02\x12\x14\n\x0c\x64istribution\x18\x02 \x01(\t\x12\x0f\n\x07maximum\x18\x03 \x01(\x05\"\x92\x01\n\x0eRecordModifier\x12#\n\x1bmax_modifications_in_record\x18\x01 \x01(\x05\x12\x1b\n\x13max_field_modifiers\x18\x02 \x01(\x05\x12\x1c\n\x14max_record_modifiers\x18\x03 \x01(\x05\x12 \n\x06\x66ields\x18\x04 \x03(\x0b\x32\x10.cronus.Modifier\"a\n\x08Modifier\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tselection\x18\x02 \x01(\x02\x12\x34\n\rprobabilities\x18\x03 \x01(\x0b\x32\x1d.cronus.ModifierProbabilities\"\xcc\x01\n\x15ModifierProbabilities\x12\x0e\n\x06insert\x18\x01 \x01(\x02\x12\x0e\n\x06\x64\x65lete\x18\x02 \x01(\x02\x12\x12\n\nsubstitute\x18\x03 \x01(\x02\x12\x10\n\x08misspell\x18\x04 \x01(\x02\x12\x11\n\ttranspose\x18\x05 \x01(\x02\x12\x0f\n\x07replace\x18\x06 \x01(\x02\x12\x0c\n\x04swap\x18\x07 \x01(\x02\x12\r\n\x05split\x18\x08 \x01(\x02\x12\r\n\x05merge\x18\t \x01(\x02\x12\x0f\n\x07nullify\x18\n \x01(\x02\x12\x0c\n\x04\x66ill\x18\x0b \x01(\x02*V\n\tFrequency\x12\x08\n\x04NONE\x10\x00\x12\t\n\x05\x44\x41ILY\x10\x01\x12\n\n\x06WEEKLY\x10\x02\x12\x0b\n\x07MONTHLY\x10\x03\x12\r\n\tQUARTERLY\x10\x04\x12\x0c\n\x08\x41NNUALLY\x10\x05*\x10\n\x04Null\x12\x08\n\x04NULL\x10\x00\x62\x06proto3')
 )
 
 _FREQUENCY = _descriptor.EnumDescriptor(
@@ -57,129 +57,12 @@ _FREQUENCY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1107,
-  serialized_end=1193,
+  serialized_start=2126,
+  serialized_end=2212,
 )
 _sym_db.RegisterEnumDescriptor(_FREQUENCY)
 
 Frequency = enum_type_wrapper.EnumTypeWrapper(_FREQUENCY)
-_ARROWTYPE = _descriptor.EnumDescriptor(
-  name='ArrowType',
-  full_name='cronus.ArrowType',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='EMPTY', index=0, number=0,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='NULL', index=1, number=1,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STRUCT', index=2, number=2,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='LIST', index=3, number=3,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='UNION', index=4, number=4,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='INT', index=5, number=5,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='FLOATPOINT', index=6, number=6,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='UTF8', index=7, number=7,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='BINARY', index=8, number=8,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='FIXEDSIZEBINARY', index=9, number=9,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='BOOL', index=10, number=10,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='DECIMAL', index=11, number=11,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='DATE', index=12, number=12,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='TIME', index=13, number=13,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='TIMESTAMP', index=14, number=14,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='INTERMAL', index=15, number=15,
-      serialized_options=None,
-      type=None),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=1196,
-  serialized_end=1401,
-)
-_sym_db.RegisterEnumDescriptor(_ARROWTYPE)
-
-ArrowType = enum_type_wrapper.EnumTypeWrapper(_ARROWTYPE)
-_CHAR = _descriptor.EnumDescriptor(
-  name='Char',
-  full_name='cronus.Char',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='CHAR', index=0, number=0,
-      serialized_options=None,
-      type=None),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=1403,
-  serialized_end=1419,
-)
-_sym_db.RegisterEnumDescriptor(_CHAR)
-
-Char = enum_type_wrapper.EnumTypeWrapper(_CHAR)
-_NUM = _descriptor.EnumDescriptor(
-  name='Num',
-  full_name='cronus.Num',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='NUM', index=0, number=0,
-      serialized_options=None,
-      type=None),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=1421,
-  serialized_end=1435,
-)
-_sym_db.RegisterEnumDescriptor(_NUM)
-
-Num = enum_type_wrapper.EnumTypeWrapper(_NUM)
 _NULL = _descriptor.EnumDescriptor(
   name='Null',
   full_name='cronus.Null',
@@ -187,14 +70,14 @@ _NULL = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='NULL_VALUE', index=0, number=0,
+      name='NULL', index=0, number=0,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1437,
-  serialized_end=1459,
+  serialized_start=2214,
+  serialized_end=2230,
 )
 _sym_db.RegisterEnumDescriptor(_NULL)
 
@@ -205,25 +88,7 @@ WEEKLY = 2
 MONTHLY = 3
 QUARTERLY = 4
 ANNUALLY = 5
-EMPTY = 0
-NULL = 1
-STRUCT = 2
-LIST = 3
-UNION = 4
-INT = 5
-FLOATPOINT = 6
-UTF8 = 7
-BINARY = 8
-FIXEDSIZEBINARY = 9
-BOOL = 10
-DECIMAL = 11
-DATE = 12
-TIME = 13
-TIMESTAMP = 14
-INTERMAL = 15
-CHAR = 0
-NUM = 0
-NULL_VALUE = 0
+NULL = 0
 
 
 
@@ -280,9 +145,23 @@ _TABLEINFO = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='schema', full_name='cronus.TableInfo.schema', index=0,
+      name='aux', full_name='cronus.TableInfo.aux', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='schema', full_name='cronus.TableInfo.schema', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='partition', full_name='cronus.TableInfo.partition', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -299,7 +178,45 @@ _TABLEINFO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=93,
-  serialized_end=136,
+  serialized_end=190,
+)
+
+
+_TABLEAUXINFO = _descriptor.Descriptor(
+  name='TableAuxInfo',
+  full_name='cronus.TableAuxInfo',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='duplicate', full_name='cronus.TableAuxInfo.duplicate', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='record_modifier', full_name='cronus.TableAuxInfo.record_modifier', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=192,
+  serialized_end=293,
 )
 
 
@@ -343,8 +260,8 @@ _SCHEMA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=138,
-  serialized_end=208,
+  serialized_start=295,
+  serialized_end=365,
 )
 
 
@@ -381,8 +298,8 @@ _SCHEMAINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=210,
-  serialized_end=289,
+  serialized_start=367,
+  serialized_end=446,
 )
 
 
@@ -415,8 +332,22 @@ _SCHEMAAUXINFO = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='frequency', full_name='cronus.SchemaAuxInfo.frequency', index=3,
-      number=4, type=14, cpp_type=8, label=1,
+      name='raw_header_size_bytes', full_name='cronus.SchemaAuxInfo.raw_header_size_bytes', index=3,
+      number=4, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='raw_footer_size_bytes', full_name='cronus.SchemaAuxInfo.raw_footer_size_bytes', index=4,
+      number=5, type=4, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='frequency', full_name='cronus.SchemaAuxInfo.frequency', index=5,
+      number=6, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -433,8 +364,8 @@ _SCHEMAAUXINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=291,
-  serialized_end=405,
+  serialized_start=449,
+  serialized_end=625,
 )
 
 
@@ -478,8 +409,8 @@ _FIELD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=407,
-  serialized_end=475,
+  serialized_start=627,
+  serialized_end=695,
 )
 
 
@@ -498,50 +429,22 @@ _FIELDINFO = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='char', full_name='cronus.FieldInfo.char', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='num', full_name='cronus.FieldInfo.num', index=2,
-      number=3, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='other', full_name='cronus.FieldInfo.other', index=3,
-      number=4, type=9, cpp_type=9, label=1,
+      name='type', full_name='cronus.FieldInfo.type', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='length', full_name='cronus.FieldInfo.length', index=4,
-      number=5, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='nullable', full_name='cronus.FieldInfo.nullable', index=5,
-      number=6, type=8, cpp_type=7, label=1,
+      name='nullable', full_name='cronus.FieldInfo.nullable', index=2,
+      number=3, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='children', full_name='cronus.FieldInfo.children', index=6,
-      number=7, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='arrow_type', full_name='cronus.FieldInfo.arrow_type', index=7,
-      number=8, type=14, cpp_type=8, label=1,
+      name='length', full_name='cronus.FieldInfo.length', index=3,
+      number=4, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -557,112 +460,9 @@ _FIELDINFO = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
-    _descriptor.OneofDescriptor(
-      name='original_type', full_name='cronus.FieldInfo.original_type',
-      index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=478,
-  serialized_end=722,
-)
-
-
-_LIST = _descriptor.Descriptor(
-  name='List',
-  full_name='cronus.List',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='cronus.List.values', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=724,
-  serialized_end=761,
-)
-
-
-_VALUE = _descriptor.Descriptor(
-  name='Value',
-  full_name='cronus.Value',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='description', full_name='cronus.Value.description', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='null', full_name='cronus.Value.null', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='int_value', full_name='cronus.Value.int_value', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='string_value', full_name='cronus.Value.string_value', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='bool_value', full_name='cronus.Value.bool_value', index=4,
-      number=5, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='list_value', full_name='cronus.Value.list_value', index=5,
-      number=6, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='value_type', full_name='cronus.Value.value_type',
-      index=0, containing_type=None, fields=[]),
-  ],
-  serialized_start=764,
-  serialized_end=939,
+  serialized_start=697,
+  serialized_end=791,
 )
 
 
@@ -699,8 +499,8 @@ _FIELDAUXINFO_METAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1047,
-  serialized_end=1105,
+  serialized_start=968,
+  serialized_end=1026,
 )
 
 _FIELDAUXINFO = _descriptor.Descriptor(
@@ -725,9 +525,23 @@ _FIELDAUXINFO = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='is_raw_field', full_name='cronus.FieldAuxInfo.is_raw_field', index=2,
-      number=3, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
+      name='codeset', full_name='cronus.FieldAuxInfo.codeset', index=2,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='generator', full_name='cronus.FieldAuxInfo.generator', index=3,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='dependent', full_name='cronus.FieldAuxInfo.dependent', index=4,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -743,66 +557,595 @@ _FIELDAUXINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=942,
-  serialized_end=1105,
+  serialized_start=794,
+  serialized_end=1026,
+)
+
+
+_VALUE_MAPVALENTRY = _descriptor.Descriptor(
+  name='MapValEntry',
+  full_name='cronus.Value.MapValEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='cronus.Value.MapValEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='cronus.Value.MapValEntry.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=_b('8\001'),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1221,
+  serialized_end=1281,
+)
+
+_VALUE = _descriptor.Descriptor(
+  name='Value',
+  full_name='cronus.Value',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='description', full_name='cronus.Value.description', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='null_val', full_name='cronus.Value.null_val', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='int_val', full_name='cronus.Value.int_val', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='string_val', full_name='cronus.Value.string_val', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bool_val', full_name='cronus.Value.bool_val', index=4,
+      number=5, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='values', full_name='cronus.Value.values', index=5,
+      number=6, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='map_val', full_name='cronus.Value.map_val', index=6,
+      number=7, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_VALUE_MAPVALENTRY, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1029,
+  serialized_end=1281,
+)
+
+
+_CODESET = _descriptor.Descriptor(
+  name='Codeset',
+  full_name='cronus.Codeset',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='cronus.Codeset.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='version', full_name='cronus.Codeset.version', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='codevalues', full_name='cronus.Codeset.codevalues', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1283,
+  serialized_end=1362,
+)
+
+
+_CODEVALUE = _descriptor.Descriptor(
+  name='Codevalue',
+  full_name='cronus.Codevalue',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='code', full_name='cronus.Codevalue.code', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='description', full_name='cronus.Codevalue.description', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='lable', full_name='cronus.Codevalue.lable', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='others', full_name='cronus.Codevalue.others', index=3,
+      number=4, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1364,
+  serialized_end=1441,
+)
+
+
+_GENERATOR = _descriptor.Descriptor(
+  name='Generator',
+  full_name='cronus.Generator',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='cronus.Generator.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='parameters', full_name='cronus.Generator.parameters', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1443,
+  serialized_end=1507,
+)
+
+
+_PARAMETER = _descriptor.Descriptor(
+  name='Parameter',
+  full_name='cronus.Parameter',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='cronus.Parameter.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='cronus.Parameter.value', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='type', full_name='cronus.Parameter.type', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='variable', full_name='cronus.Parameter.variable', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1509,
+  serialized_end=1596,
+)
+
+
+_DUPLICATE = _descriptor.Descriptor(
+  name='Duplicate',
+  full_name='cronus.Duplicate',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='probability', full_name='cronus.Duplicate.probability', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='distribution', full_name='cronus.Duplicate.distribution', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='maximum', full_name='cronus.Duplicate.maximum', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1598,
+  serialized_end=1669,
+)
+
+
+_RECORDMODIFIER = _descriptor.Descriptor(
+  name='RecordModifier',
+  full_name='cronus.RecordModifier',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='max_modifications_in_record', full_name='cronus.RecordModifier.max_modifications_in_record', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='max_field_modifiers', full_name='cronus.RecordModifier.max_field_modifiers', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='max_record_modifiers', full_name='cronus.RecordModifier.max_record_modifiers', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='fields', full_name='cronus.RecordModifier.fields', index=3,
+      number=4, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1672,
+  serialized_end=1818,
+)
+
+
+_MODIFIER = _descriptor.Descriptor(
+  name='Modifier',
+  full_name='cronus.Modifier',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='name', full_name='cronus.Modifier.name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='selection', full_name='cronus.Modifier.selection', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='probabilities', full_name='cronus.Modifier.probabilities', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1820,
+  serialized_end=1917,
+)
+
+
+_MODIFIERPROBABILITIES = _descriptor.Descriptor(
+  name='ModifierProbabilities',
+  full_name='cronus.ModifierProbabilities',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='insert', full_name='cronus.ModifierProbabilities.insert', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='delete', full_name='cronus.ModifierProbabilities.delete', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='substitute', full_name='cronus.ModifierProbabilities.substitute', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='misspell', full_name='cronus.ModifierProbabilities.misspell', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='transpose', full_name='cronus.ModifierProbabilities.transpose', index=4,
+      number=5, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='replace', full_name='cronus.ModifierProbabilities.replace', index=5,
+      number=6, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='swap', full_name='cronus.ModifierProbabilities.swap', index=6,
+      number=7, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='split', full_name='cronus.ModifierProbabilities.split', index=7,
+      number=8, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='merge', full_name='cronus.ModifierProbabilities.merge', index=8,
+      number=9, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='nullify', full_name='cronus.ModifierProbabilities.nullify', index=9,
+      number=10, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='fill', full_name='cronus.ModifierProbabilities.fill', index=10,
+      number=11, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1920,
+  serialized_end=2124,
 )
 
 _TABLE.fields_by_name['info'].message_type = _TABLEINFO
+_TABLEINFO.fields_by_name['aux'].message_type = _TABLEAUXINFO
 _TABLEINFO.fields_by_name['schema'].message_type = _SCHEMA
+_TABLEAUXINFO.fields_by_name['duplicate'].message_type = _DUPLICATE
+_TABLEAUXINFO.fields_by_name['record_modifier'].message_type = _RECORDMODIFIER
 _SCHEMA.fields_by_name['info'].message_type = _SCHEMAINFO
 _SCHEMAINFO.fields_by_name['aux'].message_type = _SCHEMAAUXINFO
 _SCHEMAINFO.fields_by_name['fields'].message_type = _FIELD
 _SCHEMAAUXINFO.fields_by_name['frequency'].enum_type = _FREQUENCY
 _FIELD.fields_by_name['info'].message_type = _FIELDINFO
 _FIELDINFO.fields_by_name['aux'].message_type = _FIELDAUXINFO
-_FIELDINFO.fields_by_name['char'].enum_type = _CHAR
-_FIELDINFO.fields_by_name['num'].enum_type = _NUM
-_FIELDINFO.fields_by_name['children'].message_type = _FIELD
-_FIELDINFO.fields_by_name['arrow_type'].enum_type = _ARROWTYPE
-_FIELDINFO.oneofs_by_name['original_type'].fields.append(
-  _FIELDINFO.fields_by_name['char'])
-_FIELDINFO.fields_by_name['char'].containing_oneof = _FIELDINFO.oneofs_by_name['original_type']
-_FIELDINFO.oneofs_by_name['original_type'].fields.append(
-  _FIELDINFO.fields_by_name['num'])
-_FIELDINFO.fields_by_name['num'].containing_oneof = _FIELDINFO.oneofs_by_name['original_type']
-_FIELDINFO.oneofs_by_name['original_type'].fields.append(
-  _FIELDINFO.fields_by_name['other'])
-_FIELDINFO.fields_by_name['other'].containing_oneof = _FIELDINFO.oneofs_by_name['original_type']
-_LIST.fields_by_name['values'].message_type = _VALUE
-_VALUE.fields_by_name['null'].enum_type = _NULL
-_VALUE.fields_by_name['list_value'].message_type = _LIST
-_VALUE.oneofs_by_name['value_type'].fields.append(
-  _VALUE.fields_by_name['null'])
-_VALUE.fields_by_name['null'].containing_oneof = _VALUE.oneofs_by_name['value_type']
-_VALUE.oneofs_by_name['value_type'].fields.append(
-  _VALUE.fields_by_name['int_value'])
-_VALUE.fields_by_name['int_value'].containing_oneof = _VALUE.oneofs_by_name['value_type']
-_VALUE.oneofs_by_name['value_type'].fields.append(
-  _VALUE.fields_by_name['string_value'])
-_VALUE.fields_by_name['string_value'].containing_oneof = _VALUE.oneofs_by_name['value_type']
-_VALUE.oneofs_by_name['value_type'].fields.append(
-  _VALUE.fields_by_name['bool_value'])
-_VALUE.fields_by_name['bool_value'].containing_oneof = _VALUE.oneofs_by_name['value_type']
-_VALUE.oneofs_by_name['value_type'].fields.append(
-  _VALUE.fields_by_name['list_value'])
-_VALUE.fields_by_name['list_value'].containing_oneof = _VALUE.oneofs_by_name['value_type']
 _FIELDAUXINFO_METAENTRY.fields_by_name['value'].message_type = _VALUE
 _FIELDAUXINFO_METAENTRY.containing_type = _FIELDAUXINFO
 _FIELDAUXINFO.fields_by_name['meta'].message_type = _FIELDAUXINFO_METAENTRY
+_FIELDAUXINFO.fields_by_name['codeset'].message_type = _CODESET
+_FIELDAUXINFO.fields_by_name['generator'].message_type = _GENERATOR
+_VALUE_MAPVALENTRY.fields_by_name['value'].message_type = _VALUE
+_VALUE_MAPVALENTRY.containing_type = _VALUE
+_VALUE.fields_by_name['null_val'].enum_type = _NULL
+_VALUE.fields_by_name['values'].message_type = _VALUE
+_VALUE.fields_by_name['map_val'].message_type = _VALUE_MAPVALENTRY
+_CODESET.fields_by_name['codevalues'].message_type = _CODEVALUE
+_GENERATOR.fields_by_name['parameters'].message_type = _PARAMETER
+_PARAMETER.fields_by_name['variable'].message_type = _FIELD
+_RECORDMODIFIER.fields_by_name['fields'].message_type = _MODIFIER
+_MODIFIER.fields_by_name['probabilities'].message_type = _MODIFIERPROBABILITIES
 DESCRIPTOR.message_types_by_name['Table'] = _TABLE
 DESCRIPTOR.message_types_by_name['TableInfo'] = _TABLEINFO
+DESCRIPTOR.message_types_by_name['TableAuxInfo'] = _TABLEAUXINFO
 DESCRIPTOR.message_types_by_name['Schema'] = _SCHEMA
 DESCRIPTOR.message_types_by_name['SchemaInfo'] = _SCHEMAINFO
 DESCRIPTOR.message_types_by_name['SchemaAuxInfo'] = _SCHEMAAUXINFO
 DESCRIPTOR.message_types_by_name['Field'] = _FIELD
 DESCRIPTOR.message_types_by_name['FieldInfo'] = _FIELDINFO
-DESCRIPTOR.message_types_by_name['List'] = _LIST
-DESCRIPTOR.message_types_by_name['Value'] = _VALUE
 DESCRIPTOR.message_types_by_name['FieldAuxInfo'] = _FIELDAUXINFO
+DESCRIPTOR.message_types_by_name['Value'] = _VALUE
+DESCRIPTOR.message_types_by_name['Codeset'] = _CODESET
+DESCRIPTOR.message_types_by_name['Codevalue'] = _CODEVALUE
+DESCRIPTOR.message_types_by_name['Generator'] = _GENERATOR
+DESCRIPTOR.message_types_by_name['Parameter'] = _PARAMETER
+DESCRIPTOR.message_types_by_name['Duplicate'] = _DUPLICATE
+DESCRIPTOR.message_types_by_name['RecordModifier'] = _RECORDMODIFIER
+DESCRIPTOR.message_types_by_name['Modifier'] = _MODIFIER
+DESCRIPTOR.message_types_by_name['ModifierProbabilities'] = _MODIFIERPROBABILITIES
 DESCRIPTOR.enum_types_by_name['Frequency'] = _FREQUENCY
-DESCRIPTOR.enum_types_by_name['ArrowType'] = _ARROWTYPE
-DESCRIPTOR.enum_types_by_name['Char'] = _CHAR
-DESCRIPTOR.enum_types_by_name['Num'] = _NUM
 DESCRIPTOR.enum_types_by_name['Null'] = _NULL
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -819,6 +1162,13 @@ TableInfo = _reflection.GeneratedProtocolMessageType('TableInfo', (_message.Mess
   # @@protoc_insertion_point(class_scope:cronus.TableInfo)
   ))
 _sym_db.RegisterMessage(TableInfo)
+
+TableAuxInfo = _reflection.GeneratedProtocolMessageType('TableAuxInfo', (_message.Message,), dict(
+  DESCRIPTOR = _TABLEAUXINFO,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.TableAuxInfo)
+  ))
+_sym_db.RegisterMessage(TableAuxInfo)
 
 Schema = _reflection.GeneratedProtocolMessageType('Schema', (_message.Message,), dict(
   DESCRIPTOR = _SCHEMA,
@@ -855,20 +1205,6 @@ FieldInfo = _reflection.GeneratedProtocolMessageType('FieldInfo', (_message.Mess
   ))
 _sym_db.RegisterMessage(FieldInfo)
 
-List = _reflection.GeneratedProtocolMessageType('List', (_message.Message,), dict(
-  DESCRIPTOR = _LIST,
-  __module__ = 'table_pb2'
-  # @@protoc_insertion_point(class_scope:cronus.List)
-  ))
-_sym_db.RegisterMessage(List)
-
-Value = _reflection.GeneratedProtocolMessageType('Value', (_message.Message,), dict(
-  DESCRIPTOR = _VALUE,
-  __module__ = 'table_pb2'
-  # @@protoc_insertion_point(class_scope:cronus.Value)
-  ))
-_sym_db.RegisterMessage(Value)
-
 FieldAuxInfo = _reflection.GeneratedProtocolMessageType('FieldAuxInfo', (_message.Message,), dict(
 
   MetaEntry = _reflection.GeneratedProtocolMessageType('MetaEntry', (_message.Message,), dict(
@@ -884,6 +1220,78 @@ FieldAuxInfo = _reflection.GeneratedProtocolMessageType('FieldAuxInfo', (_messag
 _sym_db.RegisterMessage(FieldAuxInfo)
 _sym_db.RegisterMessage(FieldAuxInfo.MetaEntry)
 
+Value = _reflection.GeneratedProtocolMessageType('Value', (_message.Message,), dict(
+
+  MapValEntry = _reflection.GeneratedProtocolMessageType('MapValEntry', (_message.Message,), dict(
+    DESCRIPTOR = _VALUE_MAPVALENTRY,
+    __module__ = 'table_pb2'
+    # @@protoc_insertion_point(class_scope:cronus.Value.MapValEntry)
+    ))
+  ,
+  DESCRIPTOR = _VALUE,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.Value)
+  ))
+_sym_db.RegisterMessage(Value)
+_sym_db.RegisterMessage(Value.MapValEntry)
+
+Codeset = _reflection.GeneratedProtocolMessageType('Codeset', (_message.Message,), dict(
+  DESCRIPTOR = _CODESET,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.Codeset)
+  ))
+_sym_db.RegisterMessage(Codeset)
+
+Codevalue = _reflection.GeneratedProtocolMessageType('Codevalue', (_message.Message,), dict(
+  DESCRIPTOR = _CODEVALUE,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.Codevalue)
+  ))
+_sym_db.RegisterMessage(Codevalue)
+
+Generator = _reflection.GeneratedProtocolMessageType('Generator', (_message.Message,), dict(
+  DESCRIPTOR = _GENERATOR,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.Generator)
+  ))
+_sym_db.RegisterMessage(Generator)
+
+Parameter = _reflection.GeneratedProtocolMessageType('Parameter', (_message.Message,), dict(
+  DESCRIPTOR = _PARAMETER,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.Parameter)
+  ))
+_sym_db.RegisterMessage(Parameter)
+
+Duplicate = _reflection.GeneratedProtocolMessageType('Duplicate', (_message.Message,), dict(
+  DESCRIPTOR = _DUPLICATE,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.Duplicate)
+  ))
+_sym_db.RegisterMessage(Duplicate)
+
+RecordModifier = _reflection.GeneratedProtocolMessageType('RecordModifier', (_message.Message,), dict(
+  DESCRIPTOR = _RECORDMODIFIER,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.RecordModifier)
+  ))
+_sym_db.RegisterMessage(RecordModifier)
+
+Modifier = _reflection.GeneratedProtocolMessageType('Modifier', (_message.Message,), dict(
+  DESCRIPTOR = _MODIFIER,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.Modifier)
+  ))
+_sym_db.RegisterMessage(Modifier)
+
+ModifierProbabilities = _reflection.GeneratedProtocolMessageType('ModifierProbabilities', (_message.Message,), dict(
+  DESCRIPTOR = _MODIFIERPROBABILITIES,
+  __module__ = 'table_pb2'
+  # @@protoc_insertion_point(class_scope:cronus.ModifierProbabilities)
+  ))
+_sym_db.RegisterMessage(ModifierProbabilities)
+
 
 _FIELDAUXINFO_METAENTRY._options = None
+_VALUE_MAPVALENTRY._options = None
 # @@protoc_insertion_point(module_scope)
