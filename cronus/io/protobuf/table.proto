@@ -30,12 +30,22 @@ message SchemaInfo {
   repeated Field fields = 2;
 }
 
+enum Frequency {
+    NONE = 0;
+    DAILY = 1;
+    WEEKLY = 2;
+    MONTHLY = 3;
+    QUARTERLY = 4;
+    ANNUALLY = 5;
+}
+
 message SchemaAuxInfo {
   string description = 1;
   bytes raw_header = 2;
   bytes raw_footer = 3;
   uint64 raw_header_size_bytes = 4;
   uint64 raw_footer_size_bytes = 5;
+  Frequency frequency = 6;
 }
 
 message Field {
@@ -54,9 +64,37 @@ message FieldInfo {
 
 message FieldAuxInfo {
   string description = 1;
-  map<string, string> meta = 2; 
+  map<string, Value> meta = 2; 
+  Codeset codeset = 7;
   Generator generator = 3;
   string dependent = 6;
+}
+
+message Value {
+  string description = 1;
+  Null null_val = 2;
+  int32 int_val = 3;
+  string string_val = 4;
+  bool bool_val = 5;
+  repeated Value values = 6;
+  map <string, Value> map_val = 7;
+}
+
+message Codeset {
+  string name = 1;
+  string version = 2;
+  repeated Codevalue codevalues = 3;
+}
+
+message Codevalue {
+  string code = 1;
+  string description = 2;
+  string lable = 3;
+  repeated string others = 4;
+}
+
+enum Null {
+  NULL= 0;
 }
 
 // Model for simutable generation
