@@ -2,9 +2,20 @@
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
-# Copyright © 2019 Ryan Mackenzie White <ryan.white4@canada.ca>
+# Copyright © Her Majesty the Queen in Right of Canada, as represented
+# by the Minister of Statistics Canada, 2019.
 #
-# Distributed under terms of the  license.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """
 Interface to the Artemis Metadata Store
@@ -17,35 +28,38 @@ from dataclasses import dataclass
 
 import pyarrow as pa
 import numpy as np
-from storefact import get_store_from_url
-# from simplekv.fs import FilesystemStore
+from simplekv.fs import FilesystemStore
 
-from cronus.io.protobuf.cronus_pb2 import CronusObjectStore
-from cronus.io.protobuf.cronus_pb2 import CronusObject, FileType
-from cronus.io.protobuf.menu_pb2 import Menu
-from cronus.io.protobuf.configuration_pb2 import Configuration
-from cronus.logger import Logger
+from artemis_format.pymodels.cronus_pb2 import CronusObjectStore
+from artemis_format.pymodels.cronus_pb2 import CronusObject, FileType
+from artemis_format.pymodels.menu_pb2 import Menu as Menu_pb
+from artemis_format.pymodels.configuration_pb2 import Configuration
+from artemis.logger import Logger
 from cronus.core.book import BaseBook
 
 # Import all the info objects to set the oneof of a CronusObject
 # Annoying boiler plate
-from cronus.io.protobuf.cronus_pb2 import MenuObjectInfo, \
-        ConfigObjectInfo, \
-        DatasetObjectInfo, \
-        HistsObjectInfo, \
-        JobObjectInfo, \
-        LogObjectInfo, \
-        FileObjectInfo, \
-        TableObjectInfo
+from artemis_format.pymodels.cronus_pb2 import (
+    MenuObjectInfo,
+    ConfigObjectInfo,
+    DatasetObjectInfo,
+    HistsObjectInfo,
+    JobObjectInfo,
+    LogObjectInfo,
+    FileObjectInfo,
+    TableObjectInfo,
+    TDigestObjectInfo,
+)
 
 
 @dataclass
 class MetaObject:
-    '''
+    """
     Helper data class for accessing a content object metadata
     The returned class does not give access to the original protobuf
     that is only accesible via uuid (content's hash)
-    '''
+    """
+
     name: str
     uuid: str
     parent_uuid: str
@@ -54,26 +68,31 @@ class MetaObject:
 
 @Logger.logged
 class BaseObjectStore(BaseBook):
+    """
+    Base Object Store derives from an OrderedDict-like class
+    """
 
-    def __init__(self,
-                 root,
-                 name,
-                 store_uuid=None,
-                 storetype='hfs',
-                 algorithm='sha1',
-                 alt_root=None):
-        '''
+    def __init__(
+        self,
+        root,
+        name,
+        store_uuid=None,
+        storetype="hfs",
+        algorithm="sha1",
+        alt_root=None,
+    ):
+        """
         Loads a base store type
         Requires a root path where the store resides
         Create a store from persisted data
         Or create a new one
-        '''
+        """
         self._mstore = CronusObjectStore()
-        self._dstore = get_store_from_url(f"{storetype}://{root}")
+        self._dstore = FilesystemStore(f"{root}")
         self._alt_dstore = None
         if alt_root is not None:
             self.__logger.info("Create alternative data store location")
-            self._alt_dstore = get_store_from_url(f"{storetype}://{alt_root}")
+            self._alt_dstore = FilesystemStore(f"{alt_root}")
         self._algorithm = algorithm
         if store_uuid is None:
             # Generate a new store
@@ -84,14 +103,14 @@ class BaseObjectStore(BaseBook):
             self._mstore.info.created.GetCurrentTime()
             self.__logger.info("Metastore ID %s", self._mstore.uuid)
             self.__logger.info("Storage location %s", self._mstore.address)
-            self.__logger.info("Created on %s",
-                               self._mstore.info.created.ToDatetime())
+            self.__logger.info("Created on %s", self._mstore.info.created.ToDatetime())
         elif store_uuid is not None:
             self.__logger.info("Load metastore from path")
             self._load_from_path(name, store_uuid)
         else:
-            self.__logger.error("Cannot retrieve store: %s from datastore %s",
-                                store_uuid, root)
+            self.__logger.error(
+                "Cannot retrieve store: %s from datastore %s", store_uuid, root
+            )
             raise KeyError
 
         self._name = self._mstore.name
@@ -106,12 +125,14 @@ class BaseObjectStore(BaseBook):
         objects = dict()
 
         for item in self._info.objects:
-            self.__logger.info("Loading object %s", item.uuid)
+            self.__logger.debug("Loading object %s", item.uuid)
             objects[item.uuid] = item
-            if item.WhichOneof('info') == 'dataset':
+            if item.WhichOneof("info") == "dataset":
                 for child in item.dataset.files:
                     objects[child.uuid] = child
                 for child in item.dataset.hists:
+                    objects[child.uuid] = child
+                for child in item.dataset.tdigests:
                     objects[child.uuid] = child
                 for child in item.dataset.logs:
                     objects[child.uuid] = child
@@ -151,19 +172,17 @@ class BaseObjectStore(BaseBook):
 
         self._mstore.ParseFromString(buf)
         if name != self._mstore.name:
-            self.__logger.error("Store name expected: %s received: %s",
-                                self._name, name)
+            self.__logger.error(
+                "Store name expected: %s received: %s", self._name, name
+            )
             raise ValueError
 
     def save_store(self):
         buf = self._mstore.SerializeToString()
         self._dstore.put(self._mstore.name, buf)
 
-    def register_content(self,
-                         content,
-                         info,
-                         **kwargs):
-        '''
+    def register_content(self, content, info, **kwargs):
+        """
         Returns a dataclass representing the content object
         content is the raw data, e.g. serialized bytestream to be persisted
         hash the bytestream, see for example github.com/dgilland/hashfs
@@ -171,22 +190,20 @@ class BaseObjectStore(BaseBook):
         info object can be used to call the correct
         register method and validate all the required inputs are received
 
-        Metadata model
-        --------------
-
-        Menu metadata
-            Menu protobuf
-        Configuration metadata
-            config protobuf
+        Metadata model includes:
+        Menu metadata (Menu protobuf)
+        Configuration metadata (config protobuf)
         Dataset metadata
-            Partition keys
-            Job Ids
-            Dataset protobuf
-            Log file
-            Hists protobuf
-            Job protobuf
-            Data files
-            Table (Schema) protobuf
+
+        Dataset metadata include:
+        Partition keys
+        Job Ids
+        Dataset protobuf
+        Log file
+        Hists protobuf
+        Job protobuf
+        Data files
+        Table (Schema) protobuf
 
         Parameters
         ----------
@@ -194,8 +211,8 @@ class BaseObjectStore(BaseBook):
         info : associated metadata object describing the content of buf
 
 
-        kwargs
-        --------
+        Other Parameters
+        ----------------
         dataset_id : required for logs, files, tables, hists
         partition_key : required for files and tables
         job_id : job index
@@ -208,20 +225,20 @@ class BaseObjectStore(BaseBook):
         -------
         MetaObject dataclass
 
-        '''
-        self.__logger.info("Registering content %s", kwargs)
-
+        """
         metaobj = None
-        dataset_id = kwargs.get('dataset_id', None)
-        partition_key = kwargs.get('partition_key', None)
-        job_id = kwargs.get('job_id', None)
-        menu_id = kwargs.get('menu_id', None)
-        config_id = kwargs.get('config_id', None)
-        glob = kwargs.get('glob', None)
+        dataset_id = kwargs.get("dataset_id", None)
+        partition_key = kwargs.get("partition_key", None)
+        job_id = kwargs.get("job_id", None)
+        #  menu_id = kwargs.get('menu_id', None)
+        #  config_id = kwargs.get('config_id', None)
+        glob = kwargs.get("glob", None)
 
         content_type = type(content)
-
-        self.__logger.info("%s %s %s", dataset_id, partition_key, job_id)
+        if kwargs is not None:
+            self.__logger.debug("Registering content %s", kwargs)
+        if dataset_id is not None:
+            self.__logger.debug("%s %s %s", dataset_id, partition_key, job_id)
         if isinstance(info, FileObjectInfo):
             if dataset_id is None:
                 self.__logger.error("Registering file requires dataset id")
@@ -233,20 +250,17 @@ class BaseObjectStore(BaseBook):
             if content_type is str:
                 if glob is None:
                     try:
-                        metaobj = self._register_file(content,
-                                                      info,
-                                                      dataset_id,
-                                                      partition_key)
+                        metaobj = self._register_file(
+                            content, info, dataset_id, partition_key
+                        )
                     except Exception:
                         self.__logger.error("Cannot register on-disk file")
                         raise
                 else:
                     try:
-                        metaobj = self._register_dir(content,
-                                                     glob,
-                                                     info,
-                                                     dataset_id,
-                                                     partition_key)
+                        metaobj = self._register_dir(
+                            content, glob, info, dataset_id, partition_key
+                        )
                     except Exception:
                         self.__logger.error("Cannot register files")
                         raise
@@ -256,20 +270,26 @@ class BaseObjectStore(BaseBook):
                     self.__logger.error("Partition file requires job id")
                     raise ValueError
                 try:
-                    metaobj = self._register_partition_file(content,
-                                                            info,
-                                                            dataset_id,
-                                                            job_id,
-                                                            partition_key)
+                    metaobj = self._register_partition_file(
+                        content, info, dataset_id, job_id, partition_key
+                    )
                 except Exception:
                     self.__logger.error("Cannot register partiion file")
                     raise
 
         elif isinstance(info, MenuObjectInfo):
-            metaobj = self._register_menu(content, info)
+            try:
+                metaobj = self._register_menu(content, info)
+            except Exception:
+                self.__logger.error("Error registering menu")
+                raise
 
         elif isinstance(info, ConfigObjectInfo):
-            metaobj = self._register_config(content, info)
+            try:
+                metaobj = self._register_config(content, info)
+            except Exception:
+                self.__logger.error("Error registering config")
+                raise
 
         elif isinstance(info, DatasetObjectInfo):
             self.__logger.error("Use register_dataset")
@@ -283,12 +303,21 @@ class BaseObjectStore(BaseBook):
                 self.__logger.error("Registering hists requires job id")
                 raise ValueError
             try:
-                metaobj = self._register_hists(content,
-                                               info,
-                                               dataset_id,
-                                               job_id)
+                metaobj = self._register_hists(content, info, dataset_id, job_id)
             except Exception:
                 self.__logger.error("Error registering hists")
+
+        elif isinstance(info, TDigestObjectInfo):
+            if dataset_id is None:
+                self.__logger.error("Registering tdigest requires dataset id")
+                raise ValueError
+            if job_id is None:
+                self.__logger.error("Registering tdigest requires job id")
+                raise ValueError
+            try:
+                metaobj = self._register_tdigests(content, info, dataset_id, job_id)
+            except Exception:
+                self.__logger.error("Error registering tdigest")
 
         elif isinstance(info, LogObjectInfo):
             self.__logger.error("To register a new log, use register_log")
@@ -302,10 +331,7 @@ class BaseObjectStore(BaseBook):
                 self.__logger.error("Registering hists requires job id")
                 raise ValueError
             try:
-                metaobj = self._register_job(content,
-                                             info,
-                                             dataset_id,
-                                             job_id)
+                metaobj = self._register_job(content, info, dataset_id, job_id)
             except Exception:
                 self.__logger.error("Error registering hists")
 
@@ -319,18 +345,16 @@ class BaseObjectStore(BaseBook):
             if partition_key is None:
                 self.__logger.error("Registering file requires partition key")
                 raise ValueError
-            metaobj = self._register_partition_table(content,
-                                                     info,
-                                                     dataset_id,
-                                                     job_id,
-                                                     partition_key)
+            metaobj = self._register_partition_table(
+                content, info, dataset_id, job_id, partition_key
+            )
         else:
             self.__logger.error("Unknown info object")
             raise ValueError
         return metaobj
 
     def register_dataset(self, menu_id=None, config_id=None):
-        '''
+        """
         dataset creation
         occurs before persisting storing information
         works as a datasink
@@ -344,8 +368,8 @@ class BaseObjectStore(BaseBook):
         Returns
         -------
         MetaObject dataclass describing the dataset content object
-        '''
-        self.__logger.info("Register new dataset")
+        """
+        self.__logger.debug("Register new dataset")
         obj = self._mstore.info.objects.add()
         obj.uuid = str(uuid.uuid4())  # Register new datsets with UUID4
         obj.parent_uuid = self._uuid
@@ -362,7 +386,7 @@ class BaseObjectStore(BaseBook):
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
     def register_log(self, dataset_id, job_id):
-        '''
+        """
         log file content
 
 
@@ -374,8 +398,8 @@ class BaseObjectStore(BaseBook):
         Returns
         -------
         MetaObject dataclass describing the log content object
-        '''
-        self.__logger.info("Register new log")
+        """
+        self.__logger.debug("Register new log")
         obj = self[dataset_id].dataset.logs.add()
         obj.uuid = str(uuid.uuid4())
         obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.log"
@@ -385,8 +409,8 @@ class BaseObjectStore(BaseBook):
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
     def update_dataset(self, dataset_id, buf):
-        '''
-        '''
+        """
+        """
         _update = DatasetObjectInfo()
         _update.ParseFromString(buf)
 
@@ -402,47 +426,60 @@ class BaseObjectStore(BaseBook):
             _new = self[dataset_id].dataset.jobs.add()
             _new.CopyFrom(obj)
             self[_new.uuid] = _new
-            objs.append(MetaObject(_new.name, _new.uuid,
-                                   _new.parent_uuid, _new.address))
+            objs.append(
+                MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address)
+            )
         for obj in _update.hists:
             _new = self[dataset_id].dataset.hists.add()
             _new.CopyFrom(obj)
             self[_new.uuid] = _new
-            objs.append(MetaObject(_new.name, _new.uuid,
-                                   _new.parent_uuid, _new.address))
+            objs.append(
+                MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address)
+            )
+
+        for obj in _update.tdigests:
+            _new = self[dataset_id].dataset.tdigests.add()
+            _new.CopyFrom(obj)
+            self[_new.uuid] = _new
+            objs.append(
+                MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address)
+            )
         for obj in _update.files:
             _new = self[dataset_id].dataset.files.add()
             _new.CopyFrom(obj)
             self[_new.uuid] = _new
-            objs.append(MetaObject(_new.name, _new.uuid,
-                                   _new.parent_uuid, _new.address))
+            objs.append(
+                MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address)
+            )
         for obj in _update.logs:
             _new = self[dataset_id].dataset.logs.add()
             _new.CopyFrom(obj)
             self[_new.uuid] = _new
-            objs.append(MetaObject(_new.name, _new.uuid,
-                                   _new.parent_uuid, _new.address))
+            objs.append(
+                MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address)
+            )
         for obj in _update.tables:
             _new = self[dataset_id].dataset.logs.add()
             _new.CopyFrom(obj)
             self[_new.uuid] = _new
-            objs.append(MetaObject(_new.name, _new.uuid,
-                                   _new.parent_uuid, _new.address))
+            objs.append(
+                MetaObject(_new.name, _new.uuid, _new.parent_uuid, _new.address)
+            )
 
     def new_job(self, dataset_id):
-        '''
+        """
         Increment job counter of a dataset
 
         Parameters
         ----------
         dataset_id : uuid of a registered dataset
-        '''
+        """
         job_idx = self[dataset_id].dataset.job_idx
         self[dataset_id].dataset.job_idx += 1
         return job_idx
 
     def new_partition(self, dataset_id, partition_key):
-        '''
+        """
         Add a partition key to a dataset
         Artemis datastreams are associated to partitions via the graph leaf
 
@@ -454,15 +491,15 @@ class BaseObjectStore(BaseBook):
         Returns
         -------
 
-        '''
+        """
         self[dataset_id].dataset.partitions.append(partition_key)
 
     def put(self, id_, content):
-        '''
+        """
         Writes data to kv store
         Support for:
-            - data wrapped as a pyarrow Buffer
-            - protocol buffer message
+        data wrapped as a pyarrow Buffer
+        protocol buffer message
 
         Parameters
         ----------
@@ -471,7 +508,7 @@ class BaseObjectStore(BaseBook):
 
         Returns
         ----------
-        '''
+        """
         if type(content) is pa.lib.Buffer:
             try:
                 self._put_object(id_, content)
@@ -484,12 +521,12 @@ class BaseObjectStore(BaseBook):
                 raise
 
     def get(self, id_, msg=None):
-        '''
+        """
         Retrieves data from kv store
         Support for:
-            - pyarrow ipc file or stream
-            - pyarrow input_stream, e.g. csv, fwf, ...
-            - bytestream protobuf message
+        pyarrow ipc file or stream
+        pyarrow input_stream, e.g. csv, fwf, ...
+        bytestream protobuf message
 
         Parameters
         ----------
@@ -503,7 +540,7 @@ class BaseObjectStore(BaseBook):
 
         Note:
             User must know protobuf message class to deserialize
-        '''
+        """
 
         if msg is None:
             return self._get_object(id_)
@@ -511,7 +548,7 @@ class BaseObjectStore(BaseBook):
             self._get_message(id_, msg)
 
     def open(self, id_):
-        '''
+        """
         Open a stream for reading
         Enables chunking of data
         Relies on the metaobject to determine how to read the file
@@ -523,9 +560,9 @@ class BaseObjectStore(BaseBook):
         Returns
         ----------
         pyarrow IO handler
-        '''
+        """
         # Returns pyarrow io handle
-        if self[id_].WhichOneof('info') == 'file':
+        if self[id_].WhichOneof("info") == "file":
             # Arrow RecordBatchFile
             if self[id_].file.type == 5:
                 # Convert the url to path
@@ -541,16 +578,19 @@ class BaseObjectStore(BaseBook):
             # Need to handle compressed files
             return self._open_stream(id_)
 
-    def list(self, prefix=u"", suffix=u""):
+    def list(self, prefix="", suffix=""):
         objs = []
         for id_ in self.keys():
-            if self[id_].name.startswith(prefix) \
-                    and self[id_].name.endswith(suffix):
-                self.__logger.info(self[id_].name)
-                objs.append(MetaObject(self[id_].name,
-                                       self[id_].uuid,
-                                       self[id_].parent_uuid,
-                                       self[id_].address))
+            if self[id_].name.startswith(prefix) and self[id_].name.endswith(suffix):
+                self.__logger.debug(self[id_].name)
+                objs.append(
+                    MetaObject(
+                        self[id_].name,
+                        self[id_].uuid,
+                        self[id_].parent_uuid,
+                        self[id_].address,
+                    )
+                )
         return objs
 
     def list_partitions(self, dataset_id):
@@ -558,6 +598,12 @@ class BaseObjectStore(BaseBook):
 
     def list_jobs(self, dataset_id):
         return self[dataset_id].dataset.jobs
+
+    def list_tdigests(self, dataset_id):
+        return self[dataset_id].dataset.tdigests
+
+    def list_histograms(self, dataset_id):
+        return self[dataset_id].dataset.hists
 
     def _compute_hash(self, stream):
         hashobj = hashlib.new(self._algorithm)
@@ -576,7 +622,7 @@ class BaseObjectStore(BaseBook):
         # New data, get a url from the datastore
         obj.address = self._dstore.url_for(obj.name)
         self.__logger.info("Retrieving url %s", obj.address)
-
+        self.__logger.info("obj name %s", obj.name)
         # Copy the info object
         obj.menu.CopyFrom(menuinfo)
         self[obj.uuid] = obj
@@ -584,9 +630,9 @@ class BaseObjectStore(BaseBook):
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
     def _register_config(self, config, configinfo):
-        '''
+        """
         Takes a config protbuf bytestream
-        '''
+        """
         self.__logger.info("Registering config object")
 
         obj = self._mstore.info.objects.add()
@@ -597,6 +643,7 @@ class BaseObjectStore(BaseBook):
         # New data, get a url from the datastore
         obj.address = self._dstore.url_for(obj.name)
         self.__logger.info("Retrieving url %s", obj.address)
+        self.__logger.info("obj name %s", obj.name)
 
         # Copy the info object
         obj.config.CopyFrom(configinfo)
@@ -604,26 +651,24 @@ class BaseObjectStore(BaseBook):
         self._put_message(obj.uuid, config)
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def _register_partition_table(self,
-                                  table,
-                                  tableinfo,
-                                  dataset_id,
-                                  job_id,
-                                  partition_key,
-                                  file_id=None):
-        '''
+    def _register_partition_table(
+        self, table, tableinfo, dataset_id, job_id, partition_key, file_id=None
+    ):
+        """
         dataset uuid
         job key
         partition key
         file uuid -- optional for tables
             extracted from an input file
             or an output RecordBatchFile
-        '''
-        self.__logger.info("Registering table Dataset %s, Partition %s", dataset_id, partition_key)
+        """
+        self.__logger.debug(
+            "Registering table Dataset %s, Partition %s", dataset_id, partition_key
+        )
         if partition_key not in self[dataset_id].dataset.partitions:
-            self.__logger.error("Partition %s not registered for dataset %s",
-                                dataset_id,
-                                partition_key)
+            self.__logger.error(
+                "Partition %s not registered for dataset %s", dataset_id, partition_key
+            )
             raise ValueError
 
         obj = self[dataset_id].dataset.tables.add()
@@ -632,33 +677,28 @@ class BaseObjectStore(BaseBook):
         obj.name = table.name
         obj.parent_uuid = dataset_id
         obj.address = self._dstore.url_for(obj.name)
-        self.__logger.info("Retrieving url %s", obj.address)
+        self.__logger.debug("Retrieving url %s", obj.address)
         obj.table.CopyFrom(tableinfo)
         self[obj.uuid] = obj
         self._put_message(obj.uuid, table)
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def _register_partition_file(self,
-                                 buf,
-                                 fileinfo,
-                                 dataset_id,
-                                 job_id,
-                                 partition_key):
-        '''
+    def _register_partition_file(
+        self, buf, fileinfo, dataset_id, job_id, partition_key
+    ):
+        """
         Requires
         dataset uuid
         partition key
         job key
         file uuid
-        '''
-        self.__logger.info("Registering file")
-        self.__logger.info("Dataset: %s, Partition: %s",
-                           dataset_id,
-                           partition_key)
+        """
+        self.__logger.debug("Registering file")
+        self.__logger.debug("Dataset: %s, Partition: %s", dataset_id, partition_key)
         if partition_key not in self[dataset_id].dataset.partitions:
-            self.__logger.error("Partition %s not registered for dataset %s",
-                                dataset_id,
-                                partition_key)
+            self.__logger.error(
+                "Partition %s not registered for dataset %s", dataset_id, partition_key
+            )
             raise ValueError
 
         key = str(FileType.Name(fileinfo.type)).lower()
@@ -671,24 +711,20 @@ class BaseObjectStore(BaseBook):
                 self._dups[obj.uuid] += 1
             else:
                 self._dups[obj.uuid] = 0
-            obj.uuid = obj.uuid + '_' + str(self._dups[obj.uuid])
+            obj.uuid = obj.uuid + "_" + str(self._dups[obj.uuid])
 
         obj.name = f"{dataset_id}.job_{job_id}.part_{partition_key}.{obj.uuid}.{key}"
         obj.parent_uuid = dataset_id
         obj.address = self._dstore.url_for(obj.name)
-        self.__logger.info("Retrieving url %s", obj.address)
+        self.__logger.debug("Retrieving url %s", obj.address)
         obj.file.CopyFrom(fileinfo)
 
         self[obj.uuid] = obj
 
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def _register_hists(self,
-                        hists,
-                        histsinfo,
-                        dataset_id,
-                        job_id):
-        '''
+    def _register_hists(self, hists, histsinfo, dataset_id, job_id):
+        """
         Requires
         uuid of dataset
         generate a hists uuid from buffer
@@ -696,8 +732,8 @@ class BaseObjectStore(BaseBook):
         keep an running index of hists?
         extension hists.data
         dataset_id.job_name.hists_id.dat
-        '''
-        self.__logger.info("Register histogram")
+        """
+        self.__logger.debug("Register histogram")
         obj = self[dataset_id].dataset.hists.add()
         # obj.uuid = self._compute_hash(pa.input_stream(buf))
         obj.uuid = str(uuid.uuid4())
@@ -709,12 +745,8 @@ class BaseObjectStore(BaseBook):
         self._put_message(obj.uuid, hists)
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def _register_job(self,
-                      meta,
-                      jobinfo,
-                      dataset_id,
-                      job_id):
-        '''
+    def _register_tdigests(self, tdigests, tdigestinfo, dataset_id, job_id):
+        """
         Requires
         uuid of dataset
         generate a hists uuid from buffer
@@ -722,8 +754,31 @@ class BaseObjectStore(BaseBook):
         keep an running index of hists?
         extension hists.data
         dataset_id.job_name.hists_id.dat
-        '''
-        self.__logger.info("Register job")
+        """
+        self.__logger.debug("Register histogram")
+        obj = self[dataset_id].dataset.tdigests.add()
+        # obj.uuid = self._compute_hash(pa.input_stream(buf))
+        obj.uuid = str(uuid.uuid4())
+        obj.parent_uuid = dataset_id
+        obj.name = f"{dataset_id}.job_{job_id}.{obj.uuid}.tdigest.pb"
+        obj.address = self._dstore.url_for(obj.name)
+        obj.tdigests.CopyFrom(tdigestinfo)
+        self[obj.uuid] = obj
+        self._put_message(obj.uuid, tdigests)
+
+        return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
+
+    def _register_job(self, meta, jobinfo, dataset_id, job_id):
+        """
+        Requires
+        uuid of dataset
+        generate a hists uuid from buffer
+        job key common to all jobs in a dataset
+        keep an running index of hists?
+        extension hists.data
+        dataset_id.job_name.hists_id.dat
+        """
+        self.__logger.debug("Register job")
         obj = self[dataset_id].dataset.jobs.add()
         # obj.uuid = self._compute_hash(pa.input_stream(buf))
         obj.uuid = str(uuid.uuid4())
@@ -736,17 +791,13 @@ class BaseObjectStore(BaseBook):
 
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def _register_file(self,
-                       location,
-                       fileinfo,
-                       dataset_id,
-                       partition_key):
-        '''
+    def _register_file(self, location, fileinfo, dataset_id, partition_key):
+        """
         Returns the content identifier
         for a file that is already in a store
         Requires a stream as bytes
-        '''
-        self.__logger.info("Registering on disk file %s", location)
+        """
+        self.__logger.debug("Registering on disk file %s", location)
         path = Path(location)
         if path.is_absolute() is False:
             path = path.resolve()
@@ -765,33 +816,25 @@ class BaseObjectStore(BaseBook):
                 self._dups[obj.uuid] += 1
             else:
                 self._dups[obj.uuid] = 0
-            obj.uuid = obj.uuid + '_' + str(self._dups[obj.uuid])
+            obj.uuid = obj.uuid + "_" + str(self._dups[obj.uuid])
 
         self[obj.uuid] = obj
         return MetaObject(obj.name, obj.uuid, obj.parent_uuid, obj.address)
 
-    def _register_dir(self,
-                      location,
-                      glob,
-                      fileinfo,
-                      dataset_id,
-                      partition_key):
-        '''
+    def _register_dir(self, location, glob, fileinfo, dataset_id, partition_key):
+        """
         Registers a directory of files in a store
-        '''
+        """
         objs = []
         for file_ in Path(location).glob(glob):
-            objs.append(self._register_file(file_,
-                                            fileinfo,
-                                            dataset_id,
-                                            partition_key))
+            objs.append(self._register_file(file_, fileinfo, dataset_id, partition_key))
         return objs
 
     def __setitem__(self, id_, msg):
-        '''
+        """
         book[key] = value
         enfore immutible store
-        '''
+        """
         if id_ in self:
             self.__logger.error("Key exists %s", id_)
             raise ValueError
@@ -804,8 +847,7 @@ class BaseObjectStore(BaseBook):
 
     def _put_message(self, id_, msg):
         # proto message to persist
-        self.__logger.info("Putting message to datastore %s",
-                           self[id_].address)
+        self.__logger.debug("Putting message to datastore %s", self[id_].address)
         try:
             self._dstore.put(self[id_].name, msg.SerializeToString())
         except IOError:
@@ -821,13 +863,12 @@ class BaseObjectStore(BaseBook):
             buf = self._dstore.get(self[id_].name)
             msg.ParseFromString(buf)
         except KeyError:
-            self.__logger.error("Message not found in store %s",
-                                self[id_].address)
+            self.__logger.error("Message not found in store %s", self[id_].address)
             raise
 
     def _put_object(self, id_, buf):
         # bytestream to persist
-        self.__logger.info("Putting buf to datastore %s", self[id_].address)
+        self.__logger.debug("Putting buf to datastore %s", self[id_].address)
         try:
             self._dstore.put(self[id_].name, buf.to_pybytes())
         except IOError:
@@ -839,7 +880,7 @@ class BaseObjectStore(BaseBook):
 
     def _get_object(self, id_):
         # get object will read object into memory buffer
-        self.__logger.info(self[id_])
+        self.__logger.debug(self[id_])
         try:
             buf = self._dstore.get(self[id_].name)
         except KeyError:
@@ -893,30 +934,24 @@ class BaseObjectStore(BaseBook):
 
 
 @Logger.logged
-class JobBuilder():
-    '''
+class JobBuilder:
+    """
     Class the simulate functionality of Artemis
-    '''
-    def __init__(self,
-                 root,
-                 store_name,
-                 store_id,
-                 menu_id,
-                 config_id,
-                 dataset_id,
-                 job_id):
+    """
+
+    def __init__(
+        self, root, store_name, store_id, menu_id, config_id, dataset_id, job_id
+    ):
 
         self.dataset_id = dataset_id
         self.job_id = job_id
 
         # Connect to the metastore
         # Setup a datastore
-        self.store = BaseObjectStore(str(root),
-                                     store_name,
-                                     store_uuid=store_id)
+        self.store = BaseObjectStore(str(root), store_name, store_uuid=store_id)
 
         self.parts = self.store.list_partitions(dataset_id)
-        self.menu = Menu()
+        self.menu = Menu_pb()
         self.store.get(menu_id, self.menu)
         self.config = Configuration()
         # Get the menu and config to run the job
@@ -925,26 +960,24 @@ class JobBuilder():
         self.buf = None
 
     def execute(self):
-        '''
+        """
         Execute simulates creating data
         creating associating metaobject
         storing data and metadata
 
         returns a serialized dataset object for updating
         a final store
-        '''
+        """
         self.__logger.info("Running job %s", self.job_id)
         data = [
-                pa.array(np.random.rand(100000,)),
-                pa.array(np.random.rand(100000,)),
-                pa.array(np.random.rand(100000,)),
-                pa.array(np.random.rand(100000,)),
-                pa.array(np.random.rand(100000,)),
-                pa.array(np.random.rand(100000,)),
-                ]
-        batch = pa.RecordBatch.from_arrays(data,
-                                           ['f0', 'f1', 'f2',
-                                            'f3', 'f4', 'f5'])
+            pa.array(np.random.rand(100000,)),
+            pa.array(np.random.rand(100000,)),
+            pa.array(np.random.rand(100000,)),
+            pa.array(np.random.rand(100000,)),
+            pa.array(np.random.rand(100000,)),
+            pa.array(np.random.rand(100000,)),
+        ]
+        batch = pa.RecordBatch.from_arrays(data, ["f0", "f1", "f2", "f3", "f4", "f5"])
         sink = pa.BufferOutputStream()
         writer = pa.RecordBatchFileWriter(sink, batch.schema)
 
@@ -956,15 +989,19 @@ class JobBuilder():
 
         fileinfo = FileObjectInfo()
         fileinfo.type = 5
-        fileinfo.aux.description = 'Some dummy data'
+        fileinfo.aux.description = "Some dummy data"
 
         ids_ = []
         for key in self.parts:
-            ids_.append(self.store.register_content(buf,
-                                                    fileinfo,
-                                                    dataset_id=self.dataset_id,
-                                                    job_id=self.job_id,
-                                                    partition_key=key).uuid)
+            ids_.append(
+                self.store.register_content(
+                    buf,
+                    fileinfo,
+                    dataset_id=self.dataset_id,
+                    job_id=self.job_id,
+                    partition_key=key,
+                ).uuid
+            )
             self.store.put(ids_[-1], buf)
         buf_ds = self.store[self.dataset_id].dataset.SerializeToString()
         self.buf = buf_ds
