@@ -42,9 +42,9 @@ from artemis_format.pymodels.histogram_pb2 import HistogramCollection
 from artemis_externals.tdigest.tdigest import TDigest
 from artemis_format.pymodels.tdigest_pb2 import TDigest_store, TDigest_instance
 
-from artemis.logger import Logger
+from artemis_base.utils.logger import Logger
 from artemis.utils.utils import autobinning
-from artemis.core.tool import ToolBase
+from artemis_base.core.tool import ToolBase
 
 
 class BaseBook(collections.MutableMapping):

@@ -34,7 +34,7 @@ from artemis_format.pymodels.cronus_pb2 import CronusObjectStore
 from artemis_format.pymodels.cronus_pb2 import CronusObject, FileType
 from artemis_format.pymodels.menu_pb2 import Menu as Menu_pb
 from artemis_format.pymodels.configuration_pb2 import Configuration
-from artemis.logger import Logger
+from artemis_base.utils.logger import Logger
 from cronus.core.book import BaseBook
 
 # Import all the info objects to set the oneof of a CronusObject
