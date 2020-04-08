@@ -43,7 +43,7 @@ from artemis_externals.tdigest.tdigest import TDigest
 from artemis_format.pymodels.tdigest_pb2 import TDigest_store, TDigest_instance
 
 from artemis_base.utils.logger import Logger
-from artemis.utils.utils import autobinning
+from artemis_base.utils.utils import autobinning
 from artemis_base.core.tool import ToolBase
 
 
