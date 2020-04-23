@@ -115,9 +115,9 @@ import plotly.graph_objects as go
 from plotly.offline import plot as plot_save
 
 # Local Artemis Import(s)
-from artemis.core.book import TDigestBook
+from cronus.core.book import TDigestBook
 from artemis_externals.tdigest.tdigest import TDigest
-from artemis_format.protobuf import cronus_pb2, histogram_pb2
+from artemis_format.pymodels import cronus_pb2, histogram_pb2
 from cronus.core.cronus import BaseObjectStore
 
 # ---------- GLOBAL PARAMETERS ---------- #
