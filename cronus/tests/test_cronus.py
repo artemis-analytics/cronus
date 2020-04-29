@@ -25,14 +25,9 @@ import unittest
 import logging
 import tempfile
 import os, shutil
-import dask.delayed
 from pathlib import Path
 import pyarrow as pa
 
-from artemis.core.singleton import Singleton
-from artemis.core.gate import ArtemisGateSvc
-from artemis.core.tree import Tree
-from artemis.core.datastore import ArrowSets
 from cronus.core.cronus import BaseObjectStore, JobBuilder
 from artemis_format.pymodels.cronus_pb2 import (
     CronusStore,
@@ -58,8 +53,6 @@ class CronusTestCase(unittest.TestCase):
         print("================================================")
         print("Beginning new TestCase %s" % self._testMethodName)
         print("================================================")
-        Singleton.reset(ArtemisGateSvc)
-        Singleton.reset(ArrowSets)
         pass
 
     def tearDown(self):
@@ -648,92 +641,6 @@ class CronusTestCase(unittest.TestCase):
             print(newmenu)
             print(newconfig)
             print("Simulation Test Done ===========================")
-
-    def test_distributed(self):
-
-        print("Simulate production")
-
-        mymenu = Menu_pb()
-        mymenu.uuid = str(uuid.uuid4())
-        mymenu.name = f"{mymenu.uuid}.menu.dat"
-
-        menuinfo = MenuObjectInfo()
-        menuinfo.created.GetCurrentTime()
-        bufmenu = pa.py_buffer(mymenu.SerializeToString())
-
-        myconfig = Configuration()
-        myconfig.uuid = str(uuid.uuid4())
-        myconfig.name = f"{myconfig.uuid}.config.dat"
-
-        configinfo = ConfigObjectInfo()
-        configinfo.created.GetCurrentTime()
-        bufconfig = pa.py_buffer(myconfig.SerializeToString())
-
-        dirpath = tempfile.mkdtemp()
-        _path = dirpath + "/test"
-        store = BaseObjectStore(
-            str(_path), "test"
-        )  # wrapper to the CronusStore message
-        # Following puts the menu and config to the datastore
-        menu_uuid = store.register_content(mymenu, menuinfo).uuid
-        config_uuid = store.register_content(myconfig, configinfo).uuid
-        dataset = store.register_dataset(menu_uuid, config_uuid)
-
-        # Multiple streams
-        store.new_partition(dataset.uuid, "key1")
-        store.new_partition(dataset.uuid, "key2")
-        store.new_partition(dataset.uuid, "key3")
-
-        # Persist the store for access in distributed jobs
-        store.save_store()
-
-        ds_bufs = []
-        for _ in range(10):
-            job_id = store.new_job(dataset.uuid)
-
-            ds_bufs.append(
-                run_job(
-                    _path,
-                    store._name,
-                    store.store_uuid,
-                    menu_uuid,
-                    config_uuid,
-                    dataset.uuid,
-                    job_id,
-                )
-            )
-        results = dask.compute(*ds_bufs, scheduler="single-threaded")
-
-        # Update the dataset
-        for buf in results:
-            store.update_dataset(dataset.uuid, buf)
-        # Save the store, reload
-        store.save_store()
-
-        # Let's check everything was saved in metastore and datastore
-        newstore = BaseObjectStore(str(_path), store._name, store_uuid=store.store_uuid)
-        ids_ = newstore.list(prefix=dataset.uuid, suffix="arrow")
-
-        for id_ in ids_:
-            print("Get object %s", id_)
-            buf = pa.py_buffer(newstore.get(id_.uuid))
-            reader = pa.ipc.open_file(buf)
-            self.assertEqual(reader.num_record_batches, 10)
-
-        # cleanup
-        if os.path.exists(dirpath):
-            shutil.rmtree(dirpath)
-
-
-@dask.delayed
-def run_job(root, store_name, store_id, menu_id, config_id, dataset_id, job_id):
-
-    runner = JobBuilder(
-        root, store_name, store_id, menu_id, config_id, dataset_id, job_id
-    )
-    runner.execute()
-    msg = runner.buf
-    return msg
 
 
 if __name__ == "__main__":

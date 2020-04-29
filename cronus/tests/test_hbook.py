@@ -18,7 +18,7 @@
 import numpy as np
 import unittest
 
-from artemis.core.book import BaseBook, ArtemisBook, TDigestBook
+from cronus.core.book import BaseBook, ArtemisBook, TDigestBook
 from artemis_externals.physt.histogram1d import Histogram1D
 from artemis_externals.physt.histogram_base import HistogramBase
 

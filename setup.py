@@ -6,6 +6,6 @@ setup(
     author="Ryan White",
     author_email="ryan.white4@canada.ca",
     packages=find_packages(),
-    install_requires=["protobuf", "simplekv>=0.12", "storefact", "pygraphviz"],
+    install_requires=[],
     description="Metastore for Artemis",
 )
