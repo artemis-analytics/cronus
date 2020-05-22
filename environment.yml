@@ -29,3 +29,5 @@ dependencies:
     - simplekv
     - plotly
     - numpy
+    - conda-build
+    - anaconda-client
